@@ -3,7 +3,7 @@ name: Web Scraping e SQLite
 tools: [Support, Author, VVG]
 image:
 description: Show some support by following me!
-external_url: https://github.com/uallasleles/Web-Scraping-e-SQLite/
+external_url: https://uallasleles.github.io/Web-Scraping-e-SQLite/
 ---
 
 # Web Scraping e SQLite

@@ -65,23 +65,30 @@ source(file = "scripts/ds_load.R")
 ``` r
 # TREINO: Pré-visualização das primeiras observações:
 etl.full %>% 
-    head() %>% 
-    tibble(caption = "Primeiras observações")
+    head()
 ```
 
-    ## # A tibble: 6 x 18
-    ##     Age Gender Polyuria Polydipsia sudden.weight.loss weakness Polyphagia
-    ##   <int> <chr>  <chr>    <chr>      <chr>              <chr>    <chr>     
-    ## 1    40 Male   No       Yes        No                 Yes      No        
-    ## 2    58 Male   No       No         No                 Yes      No        
-    ## 3    41 Male   Yes      No         No                 Yes      Yes       
-    ## 4    45 Male   No       No         Yes                Yes      Yes       
-    ## 5    60 Male   Yes      Yes        Yes                Yes      Yes       
-    ## 6    55 Male   Yes      Yes        No                 Yes      Yes       
-    ## # ... with 11 more variables: Genital.thrush <chr>, visual.blurring <chr>,
-    ## #   Itching <chr>, Irritability <chr>, delayed.healing <chr>,
-    ## #   partial.paresis <chr>, muscle.stiffness <chr>, Alopecia <chr>,
-    ## #   Obesity <chr>, class <chr>, caption <chr>
+    ##   Age Gender Polyuria Polydipsia sudden.weight.loss weakness Polyphagia
+    ## 1  40   Male       No        Yes                 No      Yes         No
+    ## 2  58   Male       No         No                 No      Yes         No
+    ## 3  41   Male      Yes         No                 No      Yes        Yes
+    ## 4  45   Male       No         No                Yes      Yes        Yes
+    ## 5  60   Male      Yes        Yes                Yes      Yes        Yes
+    ## 6  55   Male      Yes        Yes                 No      Yes        Yes
+    ##   Genital.thrush visual.blurring Itching Irritability delayed.healing
+    ## 1             No              No     Yes           No             Yes
+    ## 2             No             Yes      No           No              No
+    ## 3             No              No     Yes           No             Yes
+    ## 4            Yes              No     Yes           No             Yes
+    ## 5             No             Yes     Yes          Yes             Yes
+    ## 6             No             Yes     Yes           No             Yes
+    ##   partial.paresis muscle.stiffness Alopecia Obesity    class
+    ## 1              No              Yes      Yes     Yes Positive
+    ## 2             Yes               No      Yes      No Positive
+    ## 3              No              Yes      Yes      No Positive
+    ## 4              No               No       No      No Positive
+    ## 5             Yes              Yes      Yes     Yes Positive
+    ## 6              No              Yes      Yes     Yes Positive
 
 ------------------------------------------------------------------------
 

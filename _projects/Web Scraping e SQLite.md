@@ -142,7 +142,7 @@ user_repositories_list.head(10)
       <th>desc</th>
     </tr>
   </thead>
-  <tbody style="text-align: right; font-size: small;">
+  <tbody>
     <tr>
       <th>0</th>
       <td>https://github.com/uallasleles?tab=repositories</td>

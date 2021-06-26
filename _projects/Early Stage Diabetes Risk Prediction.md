@@ -2,7 +2,7 @@
 name: Early Stage Diabetes Risk Prediction
 tools: [R, RStudio, Markdown]
 image:
-description: Prever o risco de diabetes no estágio inicial.
+description: Prevendo o risco de diabetes no estágio inicial.
 ---
 
 Diretório de Trabalho:

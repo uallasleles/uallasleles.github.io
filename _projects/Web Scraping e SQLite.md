@@ -127,10 +127,12 @@ user_repositories_list.head(10)
 
     .dataframe tbody tr th {
         vertical-align: top;
+        font-size: small;
     }
 
     .dataframe thead th {
         text-align: right;
+        font-size: small;
     }
 </style>
 <table border="1" class="dataframe">

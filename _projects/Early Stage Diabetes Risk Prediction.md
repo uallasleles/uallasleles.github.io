@@ -1,3 +1,10 @@
+---
+name: Early_Stage_Diabetes_Risk_Prediction
+tools: [Support, Author, VVG]
+image:
+description: Early_Stage_Diabetes_Risk_Prediction
+---
+
 Diretório de Trabalho:
 
     ## [1] "C:/Users/ulp/Documents/GitHub/proj_20210619-Early_Stage_Diabetes_Risk_Prediction"

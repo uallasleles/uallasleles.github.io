@@ -122,17 +122,14 @@ user_repositories_list.head(10)
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
-        font-size: small;
     }
 
     .dataframe tbody tr th {
         vertical-align: top;
-        font-size: small;
     }
 
     .dataframe thead th {
         text-align: right;
-        font-size: small;
     }
 </style>
 <table border="1" class="dataframe">
@@ -145,7 +142,7 @@ user_repositories_list.head(10)
       <th>desc</th>
     </tr>
   </thead>
-  <tbody>
+  <tbody style="text-align: right; font-size: small;">
     <tr>
       <th>0</th>
       <td>https://github.com/uallasleles?tab=repositories</td>

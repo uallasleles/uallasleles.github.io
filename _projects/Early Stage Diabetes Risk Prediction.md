@@ -64,31 +64,21 @@ source(file = "scripts/ds_load.R")
 
 ``` r
 # TREINO: Pré-visualização das primeiras observações:
-etl.full %>% 
-    head()
+kable(etl.full[1:10,], format = "markdown", align = 'l')
 ```
 
-    ##   Age Gender Polyuria Polydipsia sudden.weight.loss weakness Polyphagia
-    ## 1  40   Male       No        Yes                 No      Yes         No
-    ## 2  58   Male       No         No                 No      Yes         No
-    ## 3  41   Male      Yes         No                 No      Yes        Yes
-    ## 4  45   Male       No         No                Yes      Yes        Yes
-    ## 5  60   Male      Yes        Yes                Yes      Yes        Yes
-    ## 6  55   Male      Yes        Yes                 No      Yes        Yes
-    ##   Genital.thrush visual.blurring Itching Irritability delayed.healing
-    ## 1             No              No     Yes           No             Yes
-    ## 2             No             Yes      No           No              No
-    ## 3             No              No     Yes           No             Yes
-    ## 4            Yes              No     Yes           No             Yes
-    ## 5             No             Yes     Yes          Yes             Yes
-    ## 6             No             Yes     Yes           No             Yes
-    ##   partial.paresis muscle.stiffness Alopecia Obesity    class
-    ## 1              No              Yes      Yes     Yes Positive
-    ## 2             Yes               No      Yes      No Positive
-    ## 3              No              Yes      Yes      No Positive
-    ## 4              No               No       No      No Positive
-    ## 5             Yes              Yes      Yes     Yes Positive
-    ## 6              No              Yes      Yes     Yes Positive
+| Age | Gender | Polyuria | Polydipsia | sudden.weight.loss | weakness | Polyphagia | Genital.thrush | visual.blurring | Itching | Irritability | delayed.healing | partial.paresis | muscle.stiffness | Alopecia | Obesity | class    |
+|:----|:-------|:---------|:-----------|:-------------------|:---------|:-----------|:---------------|:----------------|:--------|:-------------|:----------------|:----------------|:-----------------|:---------|:--------|:---------|
+| 40  | Male   | No       | Yes        | No                 | Yes      | No         | No             | No              | Yes     | No           | Yes             | No              | Yes              | Yes      | Yes     | Positive |
+| 58  | Male   | No       | No         | No                 | Yes      | No         | No             | Yes             | No      | No           | No              | Yes             | No               | Yes      | No      | Positive |
+| 41  | Male   | Yes      | No         | No                 | Yes      | Yes        | No             | No              | Yes     | No           | Yes             | No              | Yes              | Yes      | No      | Positive |
+| 45  | Male   | No       | No         | Yes                | Yes      | Yes        | Yes            | No              | Yes     | No           | Yes             | No              | No               | No       | No      | Positive |
+| 60  | Male   | Yes      | Yes        | Yes                | Yes      | Yes        | No             | Yes             | Yes     | Yes          | Yes             | Yes             | Yes              | Yes      | Yes     | Positive |
+| 55  | Male   | Yes      | Yes        | No                 | Yes      | Yes        | No             | Yes             | Yes     | No           | Yes             | No              | Yes              | Yes      | Yes     | Positive |
+| 57  | Male   | Yes      | Yes        | No                 | Yes      | Yes        | Yes            | No              | No      | No           | Yes             | Yes             | No               | No       | No      | Positive |
+| 66  | Male   | Yes      | Yes        | Yes                | Yes      | No         | No             | Yes             | Yes     | Yes          | No              | Yes             | Yes              | No       | No      | Positive |
+| 67  | Male   | Yes      | Yes        | No                 | Yes      | Yes        | Yes            | No              | Yes     | Yes          | No              | Yes             | Yes              | No       | Yes     | Positive |
+| 70  | Male   | No       | Yes        | Yes                | Yes      | Yes        | No             | Yes             | Yes     | Yes          | No              | No              | No               | Yes      | No      | Positive |
 
 ------------------------------------------------------------------------
 

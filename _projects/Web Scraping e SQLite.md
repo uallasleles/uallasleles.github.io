@@ -401,7 +401,7 @@ con.close()
 ```
 
 ## Conclusão
-Criei uma sequencia de código para extrair dados de uma página web, então salvei estes dados em um banco de dados SQLite chamado 'proj_20210623.db'. A única parte que exige um pouco mais de trabalho é a construção da lógica do scraping, pois você terá que analisar a estrutura do documento html, identificar tags e definir uma estratégia para extrair o conteúdo desejado.
+Criei uma sequencia de código para extrair dados de uma página web, então salvei estes dados em um banco de dados SQLite chamado 'proj_20210623.db'. A única parte que exige um pouco mais de trabalho é a construção da lógica do scraping, pois você terá que analisar a estrutura do documento html, identificar tags e definir uma estratégia para extrair o conteúdo desejado. 
 Após a execução do processo, podemos recuperar estes dados para análise, ou então, dar sequencia utilizando linguagem SQL para gerar consultas, gerarmos relatórios, procedimentos, agregação com outros conjuntos de dados, transferí-los para outras pessoas, etc.
 
 ## Fim

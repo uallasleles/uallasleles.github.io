@@ -1,8 +1,8 @@
 ---
-name: Early_Stage_Diabetes_Risk_Prediction
-tools: [Support, Author, VVG]
+name: Early Stage Diabetes Risk Prediction
+tools: [R, RStudio, Markdown]
 image:
-description: Early_Stage_Diabetes_Risk_Prediction
+description: Prever o risco de diabetes no estágio inicial.
 ---
 
 Diretório de Trabalho:

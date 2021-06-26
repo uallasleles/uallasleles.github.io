@@ -1,8 +1,8 @@
 ---
 name: Web Scraping e SQLite
-tools: [Support, Author, VVG]
+tools: [Python, SQLite, JupyterLab]
 image:
-description: Show some support by following me!
+description: Obtendo dados de páginas web e salvando em um banco de dados.
 ---
 
 # Web Scraping e SQLite

@@ -8,6 +8,8 @@ description: Obtendo dados de páginas web e salvando em um banco de dados.
 
 
 # Web Scraping e SQLite
+---
+
 
 ## Obtendo dados de páginas web e salvando em um banco de dados
 

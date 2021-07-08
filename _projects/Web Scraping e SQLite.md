@@ -8,19 +8,18 @@ description: Obtendo dados de páginas web e salvando em um banco de dados.
 
 
 # Web Scraping e SQLite
----
+___
 
 
 <i>Author: Uallas Leles</i><br>
 <i>Data: 23/06/2021</i>
 
-### Obtendo dados de páginas web e salvando em um banco de dados
+> **Obtendo dados de páginas web e salvando em um banco de dados** <br><br>
+> O objetivo deste projeto é obter dados de páginas web através de web scraping e salvá-los em um banco de dados SQLite <br>
+> Neste trabalho, especificamente, não há preocupação na relevância dos dados ou na exploração de insights. A finalidade é construir um workflow básico que faça a extração e estruturação dos dados para etapas seguintes.
 
-O objetivo deste projeto é obter dados de páginas web através de web scraping e salvá-los em um banco de dados SQLite.<br>
-Neste trabalho, especificamente, não há preocupação na relevância dos dados ou na exploração de insights. A finalidade é construir um workflow básico que faça a extração e estruturação dos dados para etapas seguintes.
-
-#### Definição do Problema
-- Vamos obter dados de listas de repositórios no GitHub através de web scraping, e então salvá-los em um banco de dados.
+> **Definição do Problema** <br><br>
+> Vamos obter dados de listas de repositórios no GitHub através de web scraping, e então salvá-los em um banco de dados.
 
 ## Mão na Massa
 
@@ -412,3 +411,5 @@ Criei uma sequencia de código para extrair dados de uma página web, então sal
 Após a execução do processo, podemos recuperar estes dados para análise, ou então, dar sequencia utilizando linguagem SQL para gerar consultas, gerarmos relatórios, procedimentos, agregação com outros conjuntos de dados, transferí-los para outras pessoas, etc.
 
 ## Fim
+
+___

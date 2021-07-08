@@ -6,11 +6,9 @@ description: Prevendo o risco de diabetes no estágio inicial.
 
 ---
 
-Diretório de Trabalho:
+# Early Stage Diabetes Risk Prediction
 
-    ## [1] "C:/Users/ulp/Documents/GitHub/Early-Stage-Diabetes-Risk-Prediction"
-
-# Dependências
+## Prevendo o risco de diabetes no estágio inicial.
 
 ## Pacotes
 

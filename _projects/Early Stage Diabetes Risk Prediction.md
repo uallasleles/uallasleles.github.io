@@ -1,344 +1,231 @@
 ---
-name: Early Stage Diabetes Risk Prediction
-tools: [R, RStudio, Markdown]
-image:
-description: Prevendo o risco de diabetes no estágio inicial.
-
+title       : "Early Stage Diabetes Risk Prediction"
+name        : Early Stage Diabetes Risk Prediction
+author      : "<i>Author: Uallas Leles</i>"
+date        : "<i>Date: 26 de junho, 2021</i>"
+tools       : [R, RStudio, Markdown]
+image       :
+description : "Prevendo o risco de diabetes no estágio inicial."
 ---
 
-# Early Stage Diabetes Risk Prediction
+Early Stage Diabetes Risk Prediction
+================
+<i>Author: Uallas Leles</i>
+<i>Date: 26 de junho, 2021</i>
 
-## Prevendo o risco de diabetes no estágio inicial.
+------------------------------------------------------------------------
 
-## Pacotes
+<br> **Prevendo o risco de diabetes no estágio inicial:**<br>
 
-## Funções
+> Este projeto usa técnicas de mineração de dados e de machine learning
+> para obter uma probabilidade que indique se uma pessoa tem determinada
+> doença.
+
+<br>
+
+***Definição do Problema:**<br> Dado o conjunto de parâmetros, podemos
+prever uma pessoa com diabetes em estágio inicial.*<br>
+
+***Fonte dos dados:** <br> Estes dados foram coletados por meio de
+questionários diretos de pacientes do Hospital de Diabetes Sylhet em
+Sylhet, Bangladesh, e aprovado por um médico.<br> Link: [UCI: Early
+stage diabetes risk prediction
+dataset.](https://archive.ics.uci.edu/ml/datasets/Early+stage+diabetes+risk+prediction+dataset.)*
+
+------------------------------------------------------------------------
+
+### Importando os Pacotes
 
 ``` r
-source(file = "scripts/functions.R")
+require(moments) # Coeficiente de Assimetria
+
+#install.packages("rvest")
+require(rvest) # %>% - Concatenação no uso de funções
+
+# install.packages("fdth")
+require(fdth) # Execute tabelas de distribuição de frequência, histogramas e polígonos associados de objetos vetoriais, data.frame e matriz para variáveis numéricas e categóricas.
+
+# install.packages("tidyverse")
+require(tidyverse) # Para função tibble()
+
+# install.packages("gmodels")
+require(gmodels)
+
+# install.packages("mice")
+require(mice)
+
+# Scatterplot Matrix
+# install.packages("psych")
+require(psych)
+
+# install.packages('stargazer')
+require(stargazer)
+
+# Gerando uma curva ROC em R
+# install.packages("ROCR")
+require(ROCR)
+
+# install.packages("e1071")
+require(e1071)
+
+# Gerando Confusion Matrix com o Caret
+# install.packages("caret")
+require(caret)
+
+# install.packages("Amelia")
+# require(Amelia) # missmap - Mapa de valores missing
+
+require(xtable)
+# options(xtable.floating = FALSE)
+# options(xtable.timestamp = "")
+
+#install.packages("DT")
+require(DT)
+
+require(knitr)
+
+# require(lemon)
+# knit_print.data.frame <- lemon_print
+
+#install.packages("ggplot2")
+require(ggplot2)
+
+#install.packages("dplyr")
+require(dplyr)
+
+#install.packages("hrbrthemes")
+require(hrbrthemes)
+
+# install.packages("gridExtra")
+require(gridExtra)
+
+# install.packages('corrplot')
+library(corrplot)
+
+#install.packages("skimr")
+library(skimr)
 ```
 
-# Definição do Problema
-
-------------------------------------------------------------------------
-
-**Definição:** *Early stage diabetes risk prediction dataset.. (2020).
-UCI Machine Learning Repository.*
-
-**Dataset:** *This dataset contains the sign and symptpom data of newly
-diabetic or would be diabetic patient.* *Early stage diabetes risk
-prediction dataset.. (2020). UCI Machine Learning Repository.*
-
-**Link:** [UCI: Early stage diabetes risk prediction
-dataset.](https://archive-beta.ics.uci.edu/ml/datasets/529)
-
-**Objetivo:** *Prever o risco de diabetes no estágio inicial.*
-
-------------------------------------------------------------------------
-
-# Planejamento
-
-------------------------------------------------------------------------
-
-1.  *Coleta de dados com StringAsFactor como false.*
-2.  *Limpeza e transformação das variáveis.*
-3.  *Dividir o conjunto de dados.*
-4.  *Fazer a Análise Exploratória do conjunto de treino.*
-
-------------------------------------------------------------------------
-
-# Coleta
-
-------------------------------------------------------------------------
-
-## Extração
+### Definindo Variáveis
 
 ``` r
-source(file = "scripts/ds_load.R")
+DATADIC = 'data/dictionary.txt'
 ```
 
-------------------------------------------------------------------------
-
-### Pré-visualização dos Dados
+### Criando Funções
 
 ``` r
-# TREINO: Pré-visualização das primeiras observações:
-kable(etl.full[1:10,], format = "markdown", align = 'l')
+# Função para cálculo da moda.
+moda <- function(dados){
+  vetor = table(as.vector(dados))
+  m = names(vetor)[vetor == max(vetor)]
+  return(m)}
+```
+
+### Obtendo os Dados
+
+``` r
+df <- read.csv(
+  file = 'data/diabetes.csv', 
+  stringsAsFactors = TRUE)
+```
+
+Pré-visualização
+
+``` r
+df %>% head(1) %>% kable()
 ```
 
 | Age | Gender | Polyuria | Polydipsia | sudden.weight.loss | weakness | Polyphagia | Genital.thrush | visual.blurring | Itching | Irritability | delayed.healing | partial.paresis | muscle.stiffness | Alopecia | Obesity | class    |
-|:----|:-------|:---------|:-----------|:-------------------|:---------|:-----------|:---------------|:----------------|:--------|:-------------|:----------------|:----------------|:-----------------|:---------|:--------|:---------|
-| 40  | Male   | No       | Yes        | No                 | Yes      | No         | No             | No              | Yes     | No           | Yes             | No              | Yes              | Yes      | Yes     | Positive |
-| 58  | Male   | No       | No         | No                 | Yes      | No         | No             | Yes             | No      | No           | No              | Yes             | No               | Yes      | No      | Positive |
-| 41  | Male   | Yes      | No         | No                 | Yes      | Yes        | No             | No              | Yes     | No           | Yes             | No              | Yes              | Yes      | No      | Positive |
-| 45  | Male   | No       | No         | Yes                | Yes      | Yes        | Yes            | No              | Yes     | No           | Yes             | No              | No               | No       | No      | Positive |
-| 60  | Male   | Yes      | Yes        | Yes                | Yes      | Yes        | No             | Yes             | Yes     | Yes          | Yes             | Yes             | Yes              | Yes      | Yes     | Positive |
-| 55  | Male   | Yes      | Yes        | No                 | Yes      | Yes        | No             | Yes             | Yes     | No           | Yes             | No              | Yes              | Yes      | Yes     | Positive |
-| 57  | Male   | Yes      | Yes        | No                 | Yes      | Yes        | Yes            | No              | No      | No           | Yes             | Yes             | No               | No       | No      | Positive |
-| 66  | Male   | Yes      | Yes        | Yes                | Yes      | No         | No             | Yes             | Yes     | Yes          | No              | Yes             | Yes              | No       | No      | Positive |
-| 67  | Male   | Yes      | Yes        | No                 | Yes      | Yes        | Yes            | No              | Yes     | Yes          | No              | Yes             | Yes              | No       | Yes     | Positive |
-| 70  | Male   | No       | Yes        | Yes                | Yes      | Yes        | No             | Yes             | Yes     | Yes          | No              | No              | No               | Yes      | No      | Positive |
-
-------------------------------------------------------------------------
-
-## Resumo da Importação
-
-------------------------------------------------------------------------
-
-### Dimensões
+|----:|:-------|:---------|:-----------|:-------------------|:---------|:-----------|:---------------|:----------------|:--------|:-------------|:----------------|:----------------|:-----------------|:---------|:--------|:---------|
+|  40 | Male   | No       | Yes        | No                 | Yes      | No         | No             | No              | Yes     | No           | Yes             | No              | Yes              | Yes      | Yes     | Positive |
 
 ``` r
-dim(etl.full) # Dimensões do dataset
+target_names <- c('class')
+feature_names = names(df[!names(df) %in% target_names])
 ```
 
-    ## [1] 520  17
-
-------------------------------------------------------------------------
-
-### Estrutura
+### Dicionário de Atributos
 
 ``` r
-str(etl.full) # Estrutura do dataset
+# Read a txt file
+read.delim(DATADIC, sep='|')
 ```
 
-    ## 'data.frame':    520 obs. of  17 variables:
-    ##  $ Age               : int  40 58 41 45 60 55 57 66 67 70 ...
-    ##  $ Gender            : chr  "Male" "Male" "Male" "Male" ...
-    ##  $ Polyuria          : chr  "No" "No" "Yes" "No" ...
-    ##  $ Polydipsia        : chr  "Yes" "No" "No" "No" ...
-    ##  $ sudden.weight.loss: chr  "No" "No" "No" "Yes" ...
-    ##  $ weakness          : chr  "Yes" "Yes" "Yes" "Yes" ...
-    ##  $ Polyphagia        : chr  "No" "No" "Yes" "Yes" ...
-    ##  $ Genital.thrush    : chr  "No" "No" "No" "Yes" ...
-    ##  $ visual.blurring   : chr  "No" "Yes" "No" "No" ...
-    ##  $ Itching           : chr  "Yes" "No" "Yes" "Yes" ...
-    ##  $ Irritability      : chr  "No" "No" "No" "No" ...
-    ##  $ delayed.healing   : chr  "Yes" "No" "Yes" "Yes" ...
-    ##  $ partial.paresis   : chr  "No" "Yes" "No" "No" ...
-    ##  $ muscle.stiffness  : chr  "Yes" "No" "Yes" "No" ...
-    ##  $ Alopecia          : chr  "Yes" "Yes" "Yes" "No" ...
-    ##  $ Obesity           : chr  "Yes" "No" "No" "No" ...
-    ##  $ class             : chr  "Positive" "Positive" "Positive" "Positive" ...
+    ##              Attribute              Information
+    ## 1                 Age                   1.20-65
+    ## 2                 Sex         1. Male, 2.Female
+    ## 3            Polyuria              1.Yes, 2.No.
+    ## 4          Polydipsia              1.Yes, 2.No.
+    ## 5  sudden weight loss              1.Yes, 2.No.
+    ## 6            weakness              1.Yes, 2.No.
+    ## 7          Polyphagia              1.Yes, 2.No.
+    ## 8      Genital thrush              1.Yes, 2.No.
+    ## 9     visual blurring              1.Yes, 2.No.
+    ## 10            Itching              1.Yes, 2.No.
+    ## 11       Irritability              1.Yes, 2.No.
+    ## 12    delayed healing              1.Yes, 2.No.
+    ## 13    partial paresis              1.Yes, 2.No.
+    ## 14   muscle stiffness              1.Yes, 2.No.
+    ## 15           Alopecia              1.Yes, 2.No.
+    ## 16            Obesity              1.Yes, 2.No.
+    ## 17              Class   1.Positive, 2.Negative.
 
-------------------------------------------------------------------------
-
-## Dicionário de Atributos
-
-------------------------------------------------------------------------
-
-## Limpeza e Transformação
-
-Esta etapa corresponde a um pré-processamento para então iniciar a
-análise exploratória de dados.
-
-------------------------------------------------------------------------
-
-### Dados Faltantes
+### Resumo do Dataset
 
 ``` r
-# Soma de valores missing por variável em Treino
-if(any(is.na(etl.full)))
-  {
-    subset(data.frame("SubTotal_NA" = apply(etl.full, 
-                                     2, 
-                                     function(x){
-                                       sum(is.na(x))
-                                       })), SubTotal_NA > 0)
-}
+skim(df)
 ```
 
-------------------------------------------------------------------------
+|                                                  |      |
+|:-------------------------------------------------|:-----|
+| Name                                             | df   |
+| Number of rows                                   | 520  |
+| Number of columns                                | 17   |
+| \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_   |      |
+| Column type frequency:                           |      |
+| factor                                           | 16   |
+| numeric                                          | 1    |
+| \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ |      |
+| Group variables                                  | None |
 
-### Imputação de Dados
+Data summary
 
-------------------------------------------------------------------------
+**Variable type: factor**
 
-### Transformando para Fator
+| skim\_variable     | n\_missing | complete\_rate | ordered | n\_unique | top\_counts        |
+|:-------------------|-----------:|---------------:|:--------|----------:|:-------------------|
+| Gender             |          0 |              1 | FALSE   |         2 | Mal: 328, Fem: 192 |
+| Polyuria           |          0 |              1 | FALSE   |         2 | No: 262, Yes: 258  |
+| Polydipsia         |          0 |              1 | FALSE   |         2 | No: 287, Yes: 233  |
+| sudden.weight.loss |          0 |              1 | FALSE   |         2 | No: 303, Yes: 217  |
+| weakness           |          0 |              1 | FALSE   |         2 | Yes: 305, No: 215  |
+| Polyphagia         |          0 |              1 | FALSE   |         2 | No: 283, Yes: 237  |
+| Genital.thrush     |          0 |              1 | FALSE   |         2 | No: 404, Yes: 116  |
+| visual.blurring    |          0 |              1 | FALSE   |         2 | No: 287, Yes: 233  |
+| Itching            |          0 |              1 | FALSE   |         2 | No: 267, Yes: 253  |
+| Irritability       |          0 |              1 | FALSE   |         2 | No: 394, Yes: 126  |
+| delayed.healing    |          0 |              1 | FALSE   |         2 | No: 281, Yes: 239  |
+| partial.paresis    |          0 |              1 | FALSE   |         2 | No: 296, Yes: 224  |
+| muscle.stiffness   |          0 |              1 | FALSE   |         2 | No: 325, Yes: 195  |
+| Alopecia           |          0 |              1 | FALSE   |         2 | No: 341, Yes: 179  |
+| Obesity            |          0 |              1 | FALSE   |         2 | No: 432, Yes: 88   |
+| class              |          0 |              1 | FALSE   |         2 | Pos: 320, Neg: 200 |
+
+**Variable type: numeric**
+
+| skim\_variable | n\_missing | complete\_rate |  mean |    sd |  p0 | p25 |  p50 | p75 | p100 | hist  |
+|:---------------|-----------:|---------------:|------:|------:|----:|----:|-----:|----:|-----:|:------|
+| Age            |          0 |              1 | 48.03 | 12.15 |  16 |  39 | 47.5 |  57 |   90 | ▂▇▇▃▁ |
 
 ``` r
-# Variável 'class'
-etl.full$class <- factor(etl.full$class, labels = c(Positive = "Positivo", Negative = "Negativo"))
+# Exporta os dados
+dput(df, file = "data/df.R")
 ```
 
-``` r
-# Variável 'Gender'
-etl.full$Gender <- factor(etl.full$Gender, labels = c(Male = "Homem", Female = "Mulher"))
-```
+## Análise Exploratória
 
-``` r
-# Variável 'Polyuria'
-etl.full$Polyuria <- factor(etl.full$Polyuria, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'Polydipsia'
-etl.full$Polydipsia <- factor(etl.full$Polydipsia, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'sudden.weight.loss'
-etl.full$sudden.weight.loss <- factor(etl.full$sudden.weight.loss, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'weakness'
-etl.full$weakness <- factor(etl.full$weakness, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'Polyphagia'
-etl.full$Polyphagia <- factor(etl.full$Polyphagia, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'Genital.thrush'
-etl.full$Genital.thrush <- factor(etl.full$Genital.thrush, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'visual.blurring'
-etl.full$visual.blurring <- factor(etl.full$visual.blurring, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'Itching'
-etl.full$Itching <- factor(etl.full$Itching, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'Irritability'
-etl.full$Irritability <- factor(etl.full$Irritability, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'delayed.healing'
-etl.full$delayed.healing <- factor(etl.full$delayed.healing, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'partial.paresis'
-etl.full$partial.paresis <- factor(etl.full$partial.paresis, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'muscle.stiffness'
-etl.full$muscle.stiffness <- factor(etl.full$muscle.stiffness, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'Alopecia'
-etl.full$Alopecia <- factor(etl.full$Alopecia, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-# Variável 'Obesity'
-etl.full$Obesity <- factor(etl.full$Obesity, labels = c(No = "Não", Yes = "Sim"))
-```
-
-``` r
-str(diabetes) # Estrutura do dataset
-```
-
-    ## 'data.frame':    520 obs. of  17 variables:
-    ##  $ Age               : int  40 58 41 45 60 55 57 66 67 70 ...
-    ##  $ Gender            : chr  "Male" "Male" "Male" "Male" ...
-    ##  $ Polyuria          : chr  "No" "No" "Yes" "No" ...
-    ##  $ Polydipsia        : chr  "Yes" "No" "No" "No" ...
-    ##  $ sudden.weight.loss: chr  "No" "No" "No" "Yes" ...
-    ##  $ weakness          : chr  "Yes" "Yes" "Yes" "Yes" ...
-    ##  $ Polyphagia        : chr  "No" "No" "Yes" "Yes" ...
-    ##  $ Genital.thrush    : chr  "No" "No" "No" "Yes" ...
-    ##  $ visual.blurring   : chr  "No" "Yes" "No" "No" ...
-    ##  $ Itching           : chr  "Yes" "No" "Yes" "Yes" ...
-    ##  $ Irritability      : chr  "No" "No" "No" "No" ...
-    ##  $ delayed.healing   : chr  "Yes" "No" "Yes" "Yes" ...
-    ##  $ partial.paresis   : chr  "No" "Yes" "No" "No" ...
-    ##  $ muscle.stiffness  : chr  "Yes" "No" "Yes" "No" ...
-    ##  $ Alopecia          : chr  "Yes" "Yes" "Yes" "No" ...
-    ##  $ Obesity           : chr  "Yes" "No" "No" "No" ...
-    ##  $ class             : chr  "Positive" "Positive" "Positive" "Positive" ...
-
-``` r
-str(etl.full) # Estrutura do dataset
-```
-
-    ## 'data.frame':    520 obs. of  17 variables:
-    ##  $ Age               : int  40 58 41 45 60 55 57 66 67 70 ...
-    ##  $ Gender            : Factor w/ 2 levels "Homem","Mulher": 2 2 2 2 2 2 2 2 2 2 ...
-    ##  $ Polyuria          : Factor w/ 2 levels "Não","Sim": 1 1 2 1 2 2 2 2 2 1 ...
-    ##  $ Polydipsia        : Factor w/ 2 levels "Não","Sim": 2 1 1 1 2 2 2 2 2 2 ...
-    ##  $ sudden.weight.loss: Factor w/ 2 levels "Não","Sim": 1 1 1 2 2 1 1 2 1 2 ...
-    ##  $ weakness          : Factor w/ 2 levels "Não","Sim": 2 2 2 2 2 2 2 2 2 2 ...
-    ##  $ Polyphagia        : Factor w/ 2 levels "Não","Sim": 1 1 2 2 2 2 2 1 2 2 ...
-    ##  $ Genital.thrush    : Factor w/ 2 levels "Não","Sim": 1 1 1 2 1 1 2 1 2 1 ...
-    ##  $ visual.blurring   : Factor w/ 2 levels "Não","Sim": 1 2 1 1 2 2 1 2 1 2 ...
-    ##  $ Itching           : Factor w/ 2 levels "Não","Sim": 2 1 2 2 2 2 1 2 2 2 ...
-    ##  $ Irritability      : Factor w/ 2 levels "Não","Sim": 1 1 1 1 2 1 1 2 2 2 ...
-    ##  $ delayed.healing   : Factor w/ 2 levels "Não","Sim": 2 1 2 2 2 2 2 1 1 1 ...
-    ##  $ partial.paresis   : Factor w/ 2 levels "Não","Sim": 1 2 1 1 2 1 2 2 2 1 ...
-    ##  $ muscle.stiffness  : Factor w/ 2 levels "Não","Sim": 2 1 2 1 2 2 1 2 2 1 ...
-    ##  $ Alopecia          : Factor w/ 2 levels "Não","Sim": 2 2 2 1 2 2 1 1 1 2 ...
-    ##  $ Obesity           : Factor w/ 2 levels "Não","Sim": 2 1 1 1 2 2 1 1 2 1 ...
-    ##  $ class             : Factor w/ 2 levels "Positivo","Negativo": 2 2 2 2 2 2 2 2 2 2 ...
-
-------------------------------------------------------------------------
-
-### Separando os Datasets
-
-``` r
-# Dividindo os dados em treino e teste, 70% para dados de treino e 30% para dados de teste
-set.seed(7)
-rows <- sample(1:nrow(etl.full), 0.7 * nrow(etl.full))
-etl.trn <- etl.full[rows,]
-etl.tst <- etl.full[-rows,]
-```
-
-------------------------------------------------------------------------
-
-### Removendo Variáveis
-
-------------------------------------------------------------------------
-
-### Resultado da E.T.L.
-
-``` r
-# write.csv(treino.etl, "../datasets/treino_etl.csv", row.names = FALSE)
-dput(etl.trn, file = "datasets/etl_trn.R")
-dput(etl.tst, file = "datasets/etl_tst.R")
-dput(etl.full, file = "datasets/etl_full.R")
-```
-
-------------------------------------------------------------------------
-
-# Análise Exploratória
-
-A ideia de uma análise descritiva de dados é tentar responder as
-seguintes questões:
-
-1.  Qual a ***frequência*** com que cada valor (ou intervalo de valores)
-    aparece no conjunto de dados. Ou seja, qual a distribuição de
-    frequências dos dados?
-
-2.  Quais são alguns ***valores típicos*** do conjunto de dados, como
-    mínimo e máximo?
-
-3.  Qual seria um valor para representar a ***posição central*** do
-    conjunto de dados?
-
-4.  Qual seria uma medida da ***variabilidade*** ou dispersão dos dados?
-
-5.  Existem ***valores atípicos*** ou discrepantes (outliers) no
-    conjunto de dados?
-
-6.  Os dados são simétricos? Qual a ***simetria*** dos dados?
-
-``` r
-aed.trn <- dget(file = "datasets/etl_trn.R")
-```
-
-------------------------------------------------------------------------
-
-## Classificando as Variáveis
+### Classificando as Variáveis
 
 Uma boa forma de iniciar uma análise descritiva adequada é verificar os
 tipos de variáveis disponíveis.
@@ -346,42 +233,37 @@ tipos de variáveis disponíveis.
 ``` r
 # Qualitativas Nominais
 var.fct <- c()
-for(i in 1:ncol(aed.trn)){
-    if(is.factor(aed.trn[,i]) && !is.ordered(aed.trn[,i]))
-    {
-        var.fct = c(var.fct, names(aed.trn)[i])
-    }
-}
+for(i in 1:ncol(df)){
+  if(is.factor(df[,i]) && !is.ordered(df[,i])){
+    var.fct = c(var.fct, names(df)[i])}}
 
 # Qualitativas Ordinais
 var.fct_ord <- c()
-for(i in 1:ncol(aed.trn)){
-  i = 1
-    if(is.factor(aed.trn[,i]) && is.ordered(aed.trn[,i]))
-    {
-        var.fct_ord = c(var.fct_ord, names(aed.trn)[i])
-    }
-}
+for(i in 1:ncol(df)){
+  if(is.factor(df[,i]) && is.ordered(df[,i])){
+    var.fct_ord = c(var.fct_ord, names(df)[i])}}
 
 # Quantitativas Discretas
 var.num <- c()
-for(i in 1:ncol(aed.trn)){
-    if(is.integer(aed.trn[,i]))
-    {
-        var.num <- c(var.num, names(aed.trn)[i])
-    }
-}
+for(i in 1:ncol(df)){
+  if(is.integer(df[,i])){
+    var.num <- c(var.num, names(df)[i])}}
 
 # Quantitativas Contínuas
 var.num_con <- c()
-for(i in 1:ncol(aed.trn)){
-    if(typeof(aed.trn[,i]) == "double")
-    {
-        var.num_con <- c(var.num_con, names(aed.trn)[i])
-    }
-}
+for(i in 1:ncol(df)){
+  if(typeof(df[,i]) == "double"){
+    var.num_con <- c(var.num_con, names(df)[i])}}
 
-data.frame("Qualitativas_Nominais - " = var.fct)
+d1 = data.frame("Qualitativas_Nominais - " = var.fct)
+d2 = data.frame("Qualitativas_Ordinais - " = var.fct_ord)
+d3 = data.frame("Quantitativas_Discretas - " = var.num)
+d4 = data.frame("Quantitativas_Contínuas - " = var.num_con)
+var_type_list = list(d1, d2, d3, d4)
+
+for(i in var_type_list){
+  if(dim(i)[1] != 0){
+    print(i)}}
 ```
 
     ##    Qualitativas_Nominais...
@@ -401,72 +283,34 @@ data.frame("Qualitativas_Nominais - " = var.fct)
     ## 14                 Alopecia
     ## 15                  Obesity
     ## 16                    class
-
-``` r
-data.frame("Qualitativas_Ordinais - " = var.fct_ord)
-```
-
-    ## data frame with 0 columns and 0 rows
-
-``` r
-data.frame("Quantitativas_Discretas - " = var.num)
-```
-
     ##   Quantitativas_Discretas...
     ## 1                        Age
 
-``` r
-data.frame("Quantitativas_Contínuas - " = var.num_con)
-```
-
-    ## data frame with 0 columns and 0 rows
-
-------------------------------------------------------------------------
-
-## Análise Univariada
+### Análise Univariada
 
 ``` r
-describe(aed.trn )
+describe(df) %>% kable()
 ```
 
-    ##                     vars   n  mean    sd median trimmed   mad min max range
-    ## Age                    1 364 48,51 12,19     48   48,24 13,34  16  90    74
-    ## Gender*                2 364  1,64  0,48      2    1,68  0,00   1   2     1
-    ## Polyuria*              3 364  1,47  0,50      1    1,46  0,00   1   2     1
-    ## Polydipsia*            4 364  1,45  0,50      1    1,44  0,00   1   2     1
-    ## sudden.weight.loss*    5 364  1,39  0,49      1    1,36  0,00   1   2     1
-    ## weakness*              6 364  1,57  0,50      2    1,59  0,00   1   2     1
-    ## Polyphagia*            7 364  1,44  0,50      1    1,43  0,00   1   2     1
-    ## Genital.thrush*        8 364  1,21  0,41      1    1,14  0,00   1   2     1
-    ## visual.blurring*       9 364  1,45  0,50      1    1,44  0,00   1   2     1
-    ## Itching*              10 364  1,47  0,50      1    1,46  0,00   1   2     1
-    ## Irritability*         11 364  1,24  0,43      1    1,17  0,00   1   2     1
-    ## delayed.healing*      12 364  1,43  0,50      1    1,41  0,00   1   2     1
-    ## partial.paresis*      13 364  1,42  0,49      1    1,40  0,00   1   2     1
-    ## muscle.stiffness*     14 364  1,36  0,48      1    1,32  0,00   1   2     1
-    ## Alopecia*             15 364  1,33  0,47      1    1,28  0,00   1   2     1
-    ## Obesity*              16 364  1,17  0,38      1    1,09  0,00   1   2     1
-    ## class*                17 364  1,61  0,49      2    1,64  0,00   1   2     1
-    ##                      skew kurtosis   se
-    ## Age                  0,28    -0,10 0,64
-    ## Gender*             -0,59    -1,65 0,03
-    ## Polyuria*            0,13    -1,99 0,03
-    ## Polydipsia*          0,19    -1,97 0,03
-    ## sudden.weight.loss*  0,45    -1,80 0,03
-    ## weakness*           -0,30    -1,92 0,03
-    ## Polyphagia*          0,23    -1,95 0,03
-    ## Genital.thrush*      1,41    -0,02 0,02
-    ## visual.blurring*     0,19    -1,97 0,03
-    ## Itching*             0,12    -1,99 0,03
-    ## Irritability*        1,22    -0,52 0,02
-    ## delayed.healing*     0,30    -1,92 0,03
-    ## partial.paresis*     0,31    -1,91 0,03
-    ## muscle.stiffness*    0,59    -1,65 0,03
-    ## Alopecia*            0,73    -1,46 0,02
-    ## Obesity*             1,75     1,05 0,02
-    ## class*              -0,46    -1,79 0,03
-
-------------------------------------------------------------------------
+|                      | vars |   n |      mean |         sd | median |   trimmed |     mad | min | max | range |       skew |   kurtosis |        se |
+|:---------------------|-----:|----:|----------:|-----------:|-------:|----------:|--------:|----:|----:|------:|-----------:|-----------:|----------:|
+| Age                  |    1 | 520 | 48.028846 | 12.1514660 |   47.5 | 47.649039 | 13.3434 |  16 |  90 |    74 |  0.3274616 | -0.2121409 | 0.5328770 |
+| Gender\*             |    2 | 520 |  1.630769 |  0.4830612 |    2.0 |  1.663461 |  0.0000 |   1 |   2 |     1 | -0.5403777 | -1.7112718 | 0.0211836 |
+| Polyuria\*           |    3 | 520 |  1.496154 |  0.5004667 |    1.0 |  1.495192 |  0.0000 |   1 |   2 |     1 |  0.0153407 | -2.0036067 | 0.0219469 |
+| Polydipsia\*         |    4 | 520 |  1.448077 |  0.4977755 |    1.0 |  1.435096 |  0.0000 |   1 |   2 |     1 |  0.2082192 | -1.9604037 | 0.0218289 |
+| sudden.weight.loss\* |    5 | 520 |  1.417308 |  0.4935894 |    1.0 |  1.396635 |  0.0000 |   1 |   2 |     1 |  0.3344208 | -1.8917897 | 0.0216453 |
+| weakness\*           |    6 | 520 |  1.586539 |  0.4929284 |    2.0 |  1.608173 |  0.0000 |   1 |   2 |     1 | -0.3504446 | -1.8807944 | 0.0216163 |
+| Polyphagia\*         |    7 | 520 |  1.455769 |  0.4985194 |    1.0 |  1.444711 |  0.0000 |   1 |   2 |     1 |  0.1771073 | -1.9724150 | 0.0218615 |
+| Genital.thrush\*     |    8 | 520 |  1.223077 |  0.4167104 |    1.0 |  1.153846 |  0.0000 |   1 |   2 |     1 |  1.3265354 | -0.2407558 | 0.0182740 |
+| visual.blurring\*    |    9 | 520 |  1.448077 |  0.4977755 |    1.0 |  1.435096 |  0.0000 |   1 |   2 |     1 |  0.2082192 | -1.9604037 | 0.0218289 |
+| Itching\*            |   10 | 520 |  1.486538 |  0.5003000 |    1.0 |  1.483173 |  0.0000 |   1 |   2 |     1 |  0.0537104 | -2.0009521 | 0.0219396 |
+| Irritability\*       |   11 | 520 |  1.242308 |  0.4288921 |    1.0 |  1.177885 |  0.0000 |   1 |   2 |     1 |  1.1993541 | -0.5626206 | 0.0188082 |
+| delayed.healing\*    |   12 | 520 |  1.459615 |  0.4988463 |    1.0 |  1.449519 |  0.0000 |   1 |   2 |     1 |  0.1616007 | -1.9776774 | 0.0218759 |
+| partial.paresis\*    |   13 | 520 |  1.430769 |  0.4956607 |    1.0 |  1.413461 |  0.0000 |   1 |   2 |     1 |  0.2788102 | -1.9259576 | 0.0217362 |
+| muscle.stiffness\*   |   14 | 520 |  1.375000 |  0.4845891 |    1.0 |  1.343750 |  0.0000 |   1 |   2 |     1 |  0.5149089 | -1.7382004 | 0.0212506 |
+| Alopecia\*           |   15 | 520 |  1.344231 |  0.4755743 |    1.0 |  1.305289 |  0.0000 |   1 |   2 |     1 |  0.6538187 | -1.5755399 | 0.0208553 |
+| Obesity\*            |   16 | 520 |  1.169231 |  0.3753167 |    1.0 |  1.086539 |  0.0000 |   1 |   2 |     1 |  1.7592245 |  1.0969914 | 0.0164587 |
+| class\*              |   17 | 520 |  1.615385 |  0.4869727 |    2.0 |  1.644231 |  0.0000 |   1 |   2 |     1 | -0.4729740 | -1.7797070 | 0.0213552 |
 
 ### Distribuições de Frequências
 
@@ -474,17 +318,13 @@ A primeira tarefa de uma análise estatística de um conjunto de dados
 consiste em resumí-los. As técnicas disponíveis para essa finalidade
 dependem dos tipos de variáveis envolvidas.
 
-------------------------------------------------------------------------
-
 #### Variáveis Qualitativas
 
-As distribuições podem ser representadas por meio de:
+As distribuições para *Variáveis Qualitativas* podem ser representadas
+por meio de:
 
 -   Gráfico de Barras
-
 -   Gráfico do tipo Pizza
-
-------------------------------------------------------------------------
 
 > 1.  **Distribuições de Frequências para as Variáveis Qualitativas
 >     Nominais**
@@ -492,10 +332,11 @@ As distribuições podem ser representadas por meio de:
 ``` r
 # Distribuição de Frequências para as Variáveis Qualitativas Nominais
 for(i in var.fct){
-      fdt_cat(aed.trn[,i]) %>%
-          tibble() -> df
-    names(df)[1] = c(colnames(aed.trn[i]))
-    print(kable(df[order(df[2], decreasing = TRUE),]))
+  fdt_cat(df[,i]) %>% 
+    tibble() -> df_var
+  
+  names(df_var)[1] = c(colnames(df[i]))
+  print(kable(df_var[order(df_var[2], decreasing = TRUE),]))
 }
 ```
 
@@ -503,267 +344,171 @@ for(i in var.fct){
     ## 
     ## |Gender |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:------|---:|---------:|--------:|---:|---------:|
-    ## |Mulher | 234| 0,6428571| 64,28571| 234|  64,28571|
-    ## |Homem  | 130| 0,3571429| 35,71429| 364| 100,00000|
+    ## |Male   | 328| 0.6307692| 63.07692| 328|  63.07692|
+    ## |Female | 192| 0.3692308| 36.92308| 520| 100.00000|
     ## 
     ## 
-    ## |Polyuria |   f|       rf|   rf(%)|  cf|    cf(%)|
-    ## |:--------|---:|--------:|-------:|---:|--------:|
-    ## |Não      | 194| 0,532967| 53,2967| 194|  53,2967|
-    ## |Sim      | 170| 0,467033| 46,7033| 364| 100,0000|
+    ## |Polyuria |   f|        rf|    rf(%)|  cf|     cf(%)|
+    ## |:--------|---:|---------:|--------:|---:|---------:|
+    ## |No       | 262| 0.5038462| 50.38462| 262|  50.38462|
+    ## |Yes      | 258| 0.4961538| 49.61538| 520| 100.00000|
     ## 
     ## 
     ## |Polydipsia |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:----------|---:|---------:|--------:|---:|---------:|
-    ## |Não        | 199| 0,5467033| 54,67033| 199|  54,67033|
-    ## |Sim        | 165| 0,4532967| 45,32967| 364| 100,00000|
+    ## |No         | 287| 0.5519231| 55.19231| 287|  55.19231|
+    ## |Yes        | 233| 0.4480769| 44.80769| 520| 100.00000|
     ## 
     ## 
     ## |sudden.weight.loss |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:------------------|---:|---------:|--------:|---:|---------:|
-    ## |Não                | 222| 0,6098901| 60,98901| 222|  60,98901|
-    ## |Sim                | 142| 0,3901099| 39,01099| 364| 100,00000|
+    ## |No                 | 303| 0.5826923| 58.26923| 303|  58.26923|
+    ## |Yes                | 217| 0.4173077| 41.73077| 520| 100.00000|
     ## 
     ## 
     ## |weakness |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:--------|---:|---------:|--------:|---:|---------:|
-    ## |Sim      | 209| 0,5741758| 57,41758| 209|  57,41758|
-    ## |Não      | 155| 0,4258242| 42,58242| 364| 100,00000|
+    ## |Yes      | 305| 0.5865385| 58.65385| 305|  58.65385|
+    ## |No       | 215| 0.4134615| 41.34615| 520| 100.00000|
     ## 
     ## 
     ## |Polyphagia |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:----------|---:|---------:|--------:|---:|---------:|
-    ## |Não        | 203| 0,5576923| 55,76923| 203|  55,76923|
-    ## |Sim        | 161| 0,4423077| 44,23077| 364| 100,00000|
+    ## |No         | 283| 0.5442308| 54.42308| 283|  54.42308|
+    ## |Yes        | 237| 0.4557692| 45.57692| 520| 100.00000|
     ## 
     ## 
     ## |Genital.thrush |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:--------------|---:|---------:|--------:|---:|---------:|
-    ## |Não            | 287| 0,7884615| 78,84615| 287|  78,84615|
-    ## |Sim            |  77| 0,2115385| 21,15385| 364| 100,00000|
+    ## |No             | 404| 0.7769231| 77.69231| 404|  77.69231|
+    ## |Yes            | 116| 0.2230769| 22.30769| 520| 100.00000|
     ## 
     ## 
     ## |visual.blurring |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:---------------|---:|---------:|--------:|---:|---------:|
-    ## |Não             | 199| 0,5467033| 54,67033| 199|  54,67033|
-    ## |Sim             | 165| 0,4532967| 45,32967| 364| 100,00000|
+    ## |No              | 287| 0.5519231| 55.19231| 287|  55.19231|
+    ## |Yes             | 233| 0.4480769| 44.80769| 520| 100.00000|
     ## 
     ## 
     ## |Itching |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:-------|---:|---------:|--------:|---:|---------:|
-    ## |Não     | 193| 0,5302198| 53,02198| 193|  53,02198|
-    ## |Sim     | 171| 0,4697802| 46,97802| 364| 100,00000|
+    ## |No      | 267| 0.5134615| 51.34615| 267|  51.34615|
+    ## |Yes     | 253| 0.4865385| 48.65385| 520| 100.00000|
     ## 
     ## 
-    ## |Irritability |   f|       rf|   rf(%)|  cf|    cf(%)|
-    ## |:------------|---:|--------:|-------:|---:|--------:|
-    ## |Não          | 277| 0,760989| 76,0989| 277|  76,0989|
-    ## |Sim          |  87| 0,239011| 23,9011| 364| 100,0000|
+    ## |Irritability |   f|        rf|    rf(%)|  cf|     cf(%)|
+    ## |:------------|---:|---------:|--------:|---:|---------:|
+    ## |No           | 394| 0.7576923| 75.76923| 394|  75.76923|
+    ## |Yes          | 126| 0.2423077| 24.23077| 520| 100.00000|
     ## 
     ## 
     ## |delayed.healing |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:---------------|---:|---------:|--------:|---:|---------:|
-    ## |Não             | 209| 0,5741758| 57,41758| 209|  57,41758|
-    ## |Sim             | 155| 0,4258242| 42,58242| 364| 100,00000|
+    ## |No              | 281| 0.5403846| 54.03846| 281|  54.03846|
+    ## |Yes             | 239| 0.4596154| 45.96154| 520| 100.00000|
     ## 
     ## 
     ## |partial.paresis |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:---------------|---:|---------:|--------:|---:|---------:|
-    ## |Não             | 210| 0,5769231| 57,69231| 210|  57,69231|
-    ## |Sim             | 154| 0,4230769| 42,30769| 364| 100,00000|
+    ## |No              | 296| 0.5692308| 56.92308| 296|  56.92308|
+    ## |Yes             | 224| 0.4307692| 43.07692| 520| 100.00000|
     ## 
     ## 
-    ## |muscle.stiffness |   f|        rf|    rf(%)|  cf|     cf(%)|
-    ## |:----------------|---:|---------:|--------:|---:|---------:|
-    ## |Não              | 234| 0,6428571| 64,28571| 234|  64,28571|
-    ## |Sim              | 130| 0,3571429| 35,71429| 364| 100,00000|
+    ## |muscle.stiffness |   f|    rf| rf(%)|  cf| cf(%)|
+    ## |:----------------|---:|-----:|-----:|---:|-----:|
+    ## |No               | 325| 0.625|  62.5| 325|  62.5|
+    ## |Yes              | 195| 0.375|  37.5| 520| 100.0|
     ## 
     ## 
     ## |Alopecia |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:--------|---:|---------:|--------:|---:|---------:|
-    ## |Não      | 245| 0,6730769| 67,30769| 245|  67,30769|
-    ## |Sim      | 119| 0,3269231| 32,69231| 364| 100,00000|
+    ## |No       | 341| 0.6557692| 65.57692| 341|  65.57692|
+    ## |Yes      | 179| 0.3442308| 34.42308| 520| 100.00000|
     ## 
     ## 
     ## |Obesity |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:-------|---:|---------:|--------:|---:|---------:|
-    ## |Não     | 302| 0,8296703| 82,96703| 302|  82,96703|
-    ## |Sim     |  62| 0,1703297| 17,03297| 364| 100,00000|
+    ## |No      | 432| 0.8307692| 83.07692| 432|  83.07692|
+    ## |Yes     |  88| 0.1692308| 16.92308| 520| 100.00000|
     ## 
     ## 
     ## |class    |   f|        rf|    rf(%)|  cf|     cf(%)|
     ## |:--------|---:|---------:|--------:|---:|---------:|
-    ## |Negativo | 223| 0,6126374| 61,26374| 223|  61,26374|
-    ## |Positivo | 141| 0,3873626| 38,73626| 364| 100,00000|
+    ## |Positive | 320| 0.6153846| 61.53846| 320|  61.53846|
+    ## |Negative | 200| 0.3846154| 38.46154| 520| 100.00000|
 
-------------------------------------------------------------------------
-
-> 1.  **Distribuições de Frequências para as Variáveis Qualitativas
->     Ordinais**
-
-``` r
-# Distribuição de Frequências para as Variáveis Qualitativas Ordinais
-for(i in var.fct_ord){
-      fdt_cat(aed.trn[,i]) %>%
-          tibble() -> df
-    names(df)[1] = c(colnames(aed.trn[i]))
-    print(kable(df[order(df[2], decreasing = TRUE),]))
-}
-```
-
-------------------------------------------------------------------------
-
-> 1.  **Gráfico de Barras: Variáveis Qualitativas**
+> 2.  **Gráfico de Barras: Variáveis Qualitativas**
 
 ``` r
 # Gráficos de barras para variáveis categóricas
 par(mfrow=c(2,2), cex = 0.55)
 for(i in c(var.fct, var.fct_ord)){
-        bp <- barplot(table(aed.trn[i]), 
-                      main = names(aed.trn[i]),
-                      ylim = c(0, max(table(aed.trn[i]))*1.4),
-                      col = "green")
-        text(x = as.vector(bp),
-            y = table(aed.trn[,i]) + 2,
-            label =  round(table(aed.trn[i]), 1), 
-            pos = 3,
-            col = "black")
-}
+  bp <- barplot(table(df[i]), 
+                main = names(df[i]),
+                ylim = c(0, max(table(df[i]))*1.4),
+                col = "green")
+  text(x = as.vector(bp),
+       y = table(df[,i]) + 2,
+       label =  round(table(df[i]), 1), 
+       pos = 3,
+       col = "black")}
 ```
 
-![](project_files/figure-markdown_github/Barras:%20Variáveis%20Categóricas-1.png)![](project_files/figure-markdown_github/Barras:%20Variáveis%20Categóricas-2.png)![](project_files/figure-markdown_github/Barras:%20Variáveis%20Categóricas-3.png)![](project_files/figure-markdown_github/Barras:%20Variáveis%20Categóricas-4.png)
-
-------------------------------------------------------------------------
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Barras:%20Variáveis%20Categóricas-1.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Barras:%20Variáveis%20Categóricas-2.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Barras:%20Variáveis%20Categóricas-3.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Barras:%20Variáveis%20Categóricas-4.png)<!-- -->
 
 #### Variáveis Quantitativas
 
 -   Discretas
-
 -   Contínuas
 
-    > Agrupam-se os valores das variáveis em classes e obtêm-se as
-    > frequências em cada classe.
+> Agrupam-se os valores das variáveis em classes e obtêm-se as
+> frequências em cada classe.
 
-As distribuições podem ser representadas por meio de:
+As distribuições para *Variáveis Quantitativas* podem ser representadas
+por meio de:
 
 -   Gráfico de Dispersão Unidimensional (dotplot)
-
 -   Gráfico Ramo e Folhas (Steam and Leaf)
-
 -   Histograma
 
-> 1.  **Distribuição de Frequências: Variáveis Quantitativas**
+> 3.  **Distribuição de Frequências: Variáveis Quantitativas**
 
 ``` r
 par(mfrow=c(2,1))
 # Distribuição de Frequências: Variáveis Quantitativas
-for(i in var.num){
-        df <- fdt(aed.trn[,i])
+for(i in var.num_con){
+        df_n <- fdt(df[,i])
         #names(df)[[1]] = c(colnames(aed.trn[i]))
-        print(kable(df, caption = "Title of the table"))
+        print(kable(df_n, caption = "Title of the table"))
 }
 ```
 
-    ## 
-    ## 
-    ## <table class="kable_wrapper">
-    ## <caption>Title of the table</caption>
-    ## <tbody>
-    ##   <tr>
-    ##    <td> 
-    ## 
-    ## |Class limits  |  f|        rf|      rf(%)|  cf|       cf(%)|
-    ## |:-------------|--:|---------:|----------:|---:|-----------:|
-    ## |[15,84,23,35) |  1| 0,0027473|  0,2747253|   1|   0,2747253|
-    ## |[23,35,30,85) | 31| 0,0851648|  8,5164835|  32|   8,7912088|
-    ## |[30,85,38,36) | 50| 0,1373626| 13,7362637|  82|  22,5274725|
-    ## |[38,36,45,86) | 70| 0,1923077| 19,2307692| 152|  41,7582418|
-    ## |[45,86,53,37) | 82| 0,2252747| 22,5274725| 234|  64,2857143|
-    ## |[53,37,60,88) | 72| 0,1978022| 19,7802198| 306|  84,0659341|
-    ## |[60,88,68,38) | 43| 0,1181319| 11,8131868| 349|  95,8791209|
-    ## |[68,38,75,89) | 11| 0,0302198|  3,0219780| 360|  98,9010989|
-    ## |[75,89,83,39) |  1| 0,0027473|  0,2747253| 361|  99,1758242|
-    ## |[83,39,90,9)  |  3| 0,0082418|  0,8241758| 364| 100,0000000|
-    ## 
-    ##  </td>
-    ##    <td> 
-    ## 
-    ## |      |      x|
-    ## |:-----|------:|
-    ## |start | 15,840|
-    ## |end   | 90,900|
-    ## |h     |  7,506|
-    ## |right |  0,000|
-    ## 
-    ##  </td>
-    ##   </tr>
-    ## </tbody>
-    ## </table>
-
-------------------------------------------------------------------------
-
-##### Gráficos
-
 ``` r
-par(mfrow=c(1,1))
-# Gráfico de Dispersão Unidimensional: Variáveis Quantitativas
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        dotchart(aed.trn[,i], main = paste("Dispersão Unidimensional:", names(aed.trn)[i]))
-    }
-} 
+# Build dataset with different distributions
+
+# Represent it
+df %>%
+  ggplot(aes(x = Age, fill=Gender)) +
+  geom_histogram(
+    color="#e9ecef", 
+    alpha=0.6, 
+    position = 'identity', 
+    binwidth = 5)
 ```
 
-![](project_files/figure-markdown_github/Dispersao%20Unidimensional-1.png)
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
-# Gráfico Ramo e Folhas: Variáveis Quantitativas
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        stem(aed.trn[,i])
-    }
-}
+df %>%
+  ggplot( aes(x=Age, fill=Gender) ) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual( values=c("#69b3a2", "#404080") ) +
+    labs(fill="Sexo")
 ```
 
-    ## 
-    ##   The decimal point is 1 digit(s) to the right of the |
-    ## 
-    ##   1 | 6
-    ##   2 | 
-    ##   2 | 5777777888888889
-    ##   3 | 00000000000000012223344
-    ##   3 | 5555555555555555555566666677777888888888889999999999
-    ##   4 | 000000000000000111122222223333333333333333334444
-    ##   4 | 55555555555566666777777777777777778888888888888888888889999999
-    ##   5 | 000000000000111112223333333333334444444444
-    ##   5 | 555555555555555555666666777777777777778888888889999
-    ##   6 | 000000000001111112222234444
-    ##   6 | 5555566666777777778888888889
-    ##   7 | 0000222222
-    ##   7 | 9
-    ##   8 | 
-    ##   8 | 5
-    ##   9 | 00
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-``` r
-# Gráfico Histograma: Varáveis Quantitativas
-# par(mfrow=c(1,2))
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        
-        hist(aed.trn[,i], 
-             main = paste("Histograma\n", names(aed.trn)[i]),
-             xlab = names(aed.trn)[i],
-             #ylim = c(0, max(table(aed.trn[,"Age"]))*2.5),
-             labels = TRUE,
-             nclass = round(1+3.22*log10(nrow(as.array(aed.trn[,i])))) )
-    }
-} 
-```
-
-![](project_files/figure-markdown_github/Histograma:%20Quantitativas-1.png)
-
-------------------------------------------------------------------------
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ### Medidas de Posição
 
@@ -775,18 +520,16 @@ tendência dos dados observados a se agruparem em torno dos valores
 centrais.
 
 ``` r
-  stargazer(aed.trn, median = T, mean.sd = T, iqr = T, type = "text", title = "Sumário Estatístico")
+  stargazer(df, median = T, mean.sd = T, iqr = T, type = "text", title = "Sumário Estatístico")
 ```
 
     ## 
     ## Sumário Estatístico
-    ## ======================================================================
-    ## Statistic  N     Mean      St. Dev.   Min Pctl(25) Median Pctl(75) Max
-    ## ----------------------------------------------------------------------
-    ## Age       364 48,,505.000 12,,187.000 16     39      48      57    90 
-    ## ----------------------------------------------------------------------
-
-------------------------------------------------------------------------
+    ## ==============================================================
+    ## Statistic  N   Mean  St. Dev. Min Pctl(25) Median Pctl(75) Max
+    ## --------------------------------------------------------------
+    ## Age       520 48.029  12.151  16     39     47.5     57    90 
+    ## --------------------------------------------------------------
 
 ***Moda***
 
@@ -798,10 +541,10 @@ ou preferência musical. Então a moda entra em ação.
 n = c()
 m = c()
 # Moda
-for(i in 1:ncol(aed.trn)){
-    if(is.factor(aed.trn[,i])){
-        n = c(n, names(aed.trn)[i])
-        m = c(m, moda(aed.trn[,i]))
+for(i in 1:ncol(df)){
+    if(is.factor(df[,i])){
+        n = c(n, names(df)[i])
+        m = c(m, moda(df[,i]))
     }
 }
 kable(data.frame("Variável" = n, "Moda" = m), align = "l")
@@ -809,220 +552,45 @@ kable(data.frame("Variável" = n, "Moda" = m), align = "l")
 
 | Variável           | Moda     |
 |:-------------------|:---------|
-| Gender             | Mulher   |
-| Polyuria           | Não      |
-| Polydipsia         | Não      |
-| sudden.weight.loss | Não      |
-| weakness           | Sim      |
-| Polyphagia         | Não      |
-| Genital.thrush     | Não      |
-| visual.blurring    | Não      |
-| Itching            | Não      |
-| Irritability       | Não      |
-| delayed.healing    | Não      |
-| partial.paresis    | Não      |
-| muscle.stiffness   | Não      |
-| Alopecia           | Não      |
-| Obesity            | Não      |
-| class              | Negativo |
+| Gender             | Male     |
+| Polyuria           | No       |
+| Polydipsia         | No       |
+| sudden.weight.loss | No       |
+| weakness           | Yes      |
+| Polyphagia         | No       |
+| Genital.thrush     | No       |
+| visual.blurring    | No       |
+| Itching            | No       |
+| Irritability       | No       |
+| delayed.healing    | No       |
+| partial.paresis    | No       |
+| muscle.stiffness   | No       |
+| Alopecia           | No       |
+| Obesity            | No       |
+| class              | Positive |
 
 ### Medidas Separatrizes
-
-------------------------------------------------------------------------
-
-> **Quartis**
-
-``` r
-# Quartis
-# par(mfrow=c(2,2))
-#df <- data.frame()
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        q <- data.frame(
-                quantile(aed.trn[,i])
-              )
-        names(q)[length(q)] <- names(aed.trn)[i]
-        print(q)
-    }
-}
-```
-
-    ##      Age
-    ## 0%    16
-    ## 25%   39
-    ## 50%   48
-    ## 75%   57
-    ## 100%  90
-
-------------------------------------------------------------------------
 
 > **Quintis**
 
 ``` r
 # Quintis
 par(mfrow=c(2,2))
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
+for(i in 1:ncol(df)){
+    if(is.numeric(df[,i])){
         quintis = seq(.2, .8, .2)
-        q <- data.frame(quantile(aed.trn[,i], quintis))
-        names(q) <- names(aed.trn)[i]
+        q <- data.frame(quantile(df[,i], quintis))
+        names(q) <- names(df)[i]
         print(q)
     }
 }
 ```
 
-    ##      Age
-    ## 20% 38,0
-    ## 40% 45,0
-    ## 60% 51,0
-    ## 80% 58,4
-
-------------------------------------------------------------------------
-
-> **Decis**
-
-``` r
-# Decis
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        decis = seq(.1, .9, .1)
-        q <- data.frame(quantile(aed.trn[,i], decis))
-        names(q) <- names(aed.trn)[i]
-        print(q)
-    }
-}
-```
-
-    ##      Age
-    ## 10% 33,0
-    ## 20% 38,0
-    ## 30% 41,0
-    ## 40% 45,0
-    ## 50% 48,0
-    ## 60% 51,0
-    ## 70% 55,0
-    ## 80% 58,4
-    ## 90% 65,7
-
-------------------------------------------------------------------------
-
-> **Percentis**
-
-``` r
-# Percentis
-par(mfrow=c(2,2))
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        percentis = seq(.01, .99, .01)
-        q <- data.frame(quantile(aed.trn[,i], percentis))
-        names(q) <- names(aed.trn)[i]
-        print(q)
-    }
-}
-```
-
-    ##       Age
-    ## 1%  27,00
-    ## 2%  27,26
-    ## 3%  28,00
-    ## 4%  28,00
-    ## 5%  30,00
-    ## 6%  30,00
-    ## 7%  30,00
-    ## 8%  30,00
-    ## 9%  31,67
-    ## 10% 33,00
-    ## 11% 34,93
-    ## 12% 35,00
-    ## 13% 35,00
-    ## 14% 35,00
-    ## 15% 35,00
-    ## 16% 35,00
-    ## 17% 36,00
-    ## 18% 36,34
-    ## 19% 37,00
-    ## 20% 38,00
-    ## 21% 38,00
-    ## 22% 38,00
-    ## 23% 39,00
-    ## 24% 39,00
-    ## 25% 39,00
-    ## 26% 40,00
-    ## 27% 40,00
-    ## 28% 40,00
-    ## 29% 40,00
-    ## 30% 41,00
-    ## 31% 42,00
-    ## 32% 42,00
-    ## 33% 43,00
-    ## 34% 43,00
-    ## 35% 43,00
-    ## 36% 43,00
-    ## 37% 43,00
-    ## 38% 44,00
-    ## 39% 45,00
-    ## 40% 45,00
-    ## 41% 45,00
-    ## 42% 46,00
-    ## 43% 46,09
-    ## 44% 47,00
-    ## 45% 47,00
-    ## 46% 47,00
-    ## 47% 47,00
-    ## 48% 48,00
-    ## 49% 48,00
-    ## 50% 48,00
-    ## 51% 48,00
-    ## 52% 48,00
-    ## 53% 48,00
-    ## 54% 49,00
-    ## 55% 49,00
-    ## 56% 50,00
-    ## 57% 50,00
-    ## 58% 50,00
-    ## 59% 51,00
-    ## 60% 51,00
-    ## 61% 52,43
-    ## 62% 53,00
-    ## 63% 53,00
-    ## 64% 53,00
-    ## 65% 54,00
-    ## 66% 54,00
-    ## 67% 54,21
-    ## 68% 55,00
-    ## 69% 55,00
-    ## 70% 55,00
-    ## 71% 55,00
-    ## 72% 55,36
-    ## 73% 56,00
-    ## 74% 57,00
-    ## 75% 57,00
-    ## 76% 57,00
-    ## 77% 57,00
-    ## 78% 58,00
-    ## 79% 58,00
-    ## 80% 58,40
-    ## 81% 59,03
-    ## 82% 60,00
-    ## 83% 60,00
-    ## 84% 60,00
-    ## 85% 61,00
-    ## 86% 62,00
-    ## 87% 62,00
-    ## 88% 64,00
-    ## 89% 65,00
-    ## 90% 65,70
-    ## 91% 66,00
-    ## 92% 67,00
-    ## 93% 67,00
-    ## 94% 68,00
-    ## 95% 68,00
-    ## 96% 68,48
-    ## 97% 70,00
-    ## 98% 72,00
-    ## 99% 74,59
-
-------------------------------------------------------------------------
+    ##     Age
+    ## 20%  37
+    ## 40%  44
+    ## 60%  50
+    ## 80%  58
 
 > **Boxplot**
 
@@ -1035,24 +603,41 @@ distribuição. Boxplots são úteis para a comparação de vários conjuntos
 de dados.
 
 ``` r
-# Boxplot
-# par(mfrow=c(2,2))
-aed.trn$previsao = NULL
-aed.trn$index = NULL
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        boxplot(summary(aed.trn[,i]), 
-                ylab = names(aed.trn)[i], 
-                main = paste("Boxplot", names(aed.trn)[i]))
-    }
-}
+# libraries
+#install.packages("gridExtra")
+library(ggplot2)
+library(gridExtra)
+ 
+# Make 3 simple graphics:
+g1 <- ggplot(df, aes(x=Age)) + geom_density(fill="slateblue")
+g2 <- ggplot(df, aes(x=Age, y=class, color=class)) + geom_point(size=5) + theme(legend.position="none")
+g3 <- ggplot(df, aes(x=factor(Gender), y=Age, fill=class)) + geom_boxplot() + theme(legend.position="none")
+g4 <- ggplot(df , aes(x=factor(Gender), fill=factor(Gender))) +  geom_bar()
+ 
+# Plots
+grid.arrange(g2, arrangeGrob(g3, g4, ncol=2), nrow = 2)
 ```
 
-![](project_files/figure-markdown_github/Boxplot-1.png)
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Boxplot-1.png)<!-- -->
 
-------------------------------------------------------------------------
+``` r
+grid.arrange(g1, g2, g3, nrow = 3)
+```
 
-### Medidas de Dispersão
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Boxplot-2.png)<!-- -->
+
+``` r
+grid.arrange(g2, arrangeGrob(g3, g4, ncol=2), nrow = 1)
+```
+
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Boxplot-3.png)<!-- -->
+
+``` r
+grid.arrange(g2, arrangeGrob(g3, g4, nrow=2), nrow = 1)
+```
+
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Boxplot-4.png)<!-- -->
+\#\#\# Medidas de Dispersão
 
 As medidas de dispersão são a amplitude total, a variância, o
 desvio-padrão e o coeficiente de variação.
@@ -1068,17 +653,15 @@ variabilidade interna dos valores da série.
 
 ``` r
 # Amplitude Total
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-      amp <- diff(range(aed.trn[,i]))
+for(i in 1:ncol(df)){
+    if(is.numeric(df[,i])){
+      amp <- diff(range(df[,i]))
       print(amp)
     }
 }
 ```
 
     ## [1] 74
-
-------------------------------------------------------------------------
 
 > **Variância**
 
@@ -1090,18 +673,16 @@ for(i in 1:ncol(aed.trn)){
 
 ``` r
 # Variância
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
+for(i in 1:ncol(df)){
+    if(is.numeric(df[,i])){
         print(
-            var(aed.trn[,i])
+            var(df[,i])
             )
     }
 }
 ```
 
-    ## [1] 148,5261
-
-------------------------------------------------------------------------
+    ## [1] 147.6581
 
 > **Desvio Padrão**
 
@@ -1118,16 +699,16 @@ for(i in 1:ncol(aed.trn)){
 
 ``` r
 # Desvio Padrão
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
+for(i in 1:ncol(df)){
+    if(is.numeric(df[,i])){
         print(
-            sd(aed.trn[,i])
+            sd(df[,i])
         )
     }
 }
 ```
 
-    ## [1] 12,18713
+    ## [1] 12.15147
 
 -   **Coeficiente de Variação**
 
@@ -1143,17 +724,15 @@ for(i in 1:ncol(aed.trn)){
 
 ``` r
 # Coeficiente de Variação
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        cv <- 100*sd(aed.trn[,i]/mean(aed.trn[,i]))
+for(i in 1:ncol(df)){
+    if(is.numeric(df[,i])){
+        cv <- 100*sd(df[,i]/mean(df[,i]))
         print(cv)
     }
 }
 ```
 
-    ## [1] 25,12526
-
-------------------------------------------------------------------------
+    ## [1] 25.30035
 
 ### Medidas de Assimetria e Achatamento
 
@@ -1194,51 +773,48 @@ for(i in 1:ncol(aed.trn)){
     distribuição normal.
 
 ``` r
-#par(mfrow=c(2,2))
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
+par(mfrow=c(2,2))
+for(i in 1:ncol(df)){
+    if(is.numeric(df[,i])){
         
-        datasim <- data.frame(aed.trn[,i])
-        g <- ggplot(datasim, aes(x = aed.trn[,i]), binwidth = 2) + 
+        datasim <- data.frame(df[,i])
+        g <- ggplot(datasim, aes(x = df[,i]), binwidth = 2) + 
           geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
           geom_density(colour = 'blue') + xlab(expression(bold('Dados'))) + 
           ylab(expression(bold('Densidade')))
         
         print(g)
-        
     }
 }
 ```
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](project_files/figure-markdown_github/Histograma-1.png)
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Histograma-1.png)<!-- -->
 
 ``` r
 # Coeficiente de Assimetria (Skew)
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        ca <- skewness(aed.trn[,i])
+for(i in 1:ncol(df)){
+    if(is.numeric(df[,i])){
+        ca <- skewness(df[,i])
         print(ca)
     }
 }
 ```
 
-    ## [1] 0,2804123
+    ## [1] 0.3274616
 
 ``` r
 # Coeficiente de Curtose
-for(i in 1:ncol(aed.trn)){
-    if(is.numeric(aed.trn[,i])){
-        ck <- kurtosis(aed.trn[,i])
+for(i in 1:ncol(df)){
+    if(is.numeric(df[,i])){
+        ck <- kurtosis(df[,i])
         print(ck)
     }
 }
 ```
 
-    ## [1] -0,09548968
-
-------------------------------------------------------------------------
+    ## [1] -0.2121409
 
 ## Análise Bivariada
 
@@ -1259,8 +835,6 @@ provenientes da observação da mesma variável.
 
     -   Uma variável é qualitativa e a outra é quantitativa.
 
-------------------------------------------------------------------------
-
 ### Duas Categóricas
 
 Quando as variáveis são qualitativas, os dados são resumidos em
@@ -1279,8 +853,6 @@ expressar as frequências relativas de cada casela (célula):
 
 3.  Em relação ao total de cada coluna.
 
-------------------------------------------------------------------------
-
 #### Tabelas de Contingência
 
 A função *CrossTable* implementa uma tabela de tabulação cruzada, com
@@ -1296,8 +868,8 @@ evento.
 ``` r
 par(mfrow=c(1,2))
 for(i in var.fct[-1]){
-  CrossTable(aed.trn$class, 
-             aed.trn[,i],
+  CrossTable(df$class, 
+             df[,i],
              prop.t = T,
              chisq = T,
              digits = 2,
@@ -1317,26 +889,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | Polyuria 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       130 |        11 |       141 | 
-    ##              |     40,04 |     45,69 |           | 
-    ##              |      0,92 |      0,08 |      0,39 | 
-    ##              |      0,67 |      0,06 |           | 
-    ##              |      0,36 |      0,03 |           | 
+    ##     Negative |       185 |        15 |       200 | 
+    ##              |     70.41 |     71.50 |           | 
+    ##              |      0.92 |      0.07 |      0.38 | 
+    ##              |      0.71 |      0.06 |           | 
+    ##              |      0.36 |      0.03 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |        64 |       159 |       223 | 
-    ##              |     25,31 |     28,89 |           | 
-    ##              |      0,29 |      0,71 |      0,61 | 
-    ##              |      0,33 |      0,94 |           | 
-    ##              |      0,18 |      0,44 |           | 
+    ##     Positive |        77 |       243 |       320 | 
+    ##              |     44.00 |     44.69 |           | 
+    ##              |      0.24 |      0.76 |      0.62 | 
+    ##              |      0.29 |      0.94 |           | 
+    ##              |      0.15 |      0.47 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       194 |       170 |       364 | 
-    ##              |      0,53 |      0,47 |           | 
+    ## Column Total |       262 |       258 |       520 | 
+    ##              |      0.50 |      0.50 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1345,11 +917,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  139,9294     d.f. =  1     p =  2,758406e-32 
+    ## Chi^2 =  230.5954     d.f. =  1     p =  4.42081e-52 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  137,3899     d.f. =  1     p =  9,908517e-32 
+    ## Chi^2 =  227.8658     d.f. =  1     p =  1.740912e-51 
     ## 
     ##  
     ## 
@@ -1364,26 +936,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | Polydipsia 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       134 |         7 |       141 | 
-    ##              |     42,02 |     50,68 |           | 
-    ##              |      0,95 |      0,05 |      0,39 | 
-    ##              |      0,67 |      0,04 |           | 
-    ##              |      0,37 |      0,02 |           | 
+    ##     Negative |       192 |         8 |       200 | 
+    ##              |     60.34 |     74.33 |           | 
+    ##              |      0.96 |      0.04 |      0.38 | 
+    ##              |      0.67 |      0.03 |           | 
+    ##              |      0.37 |      0.02 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |        65 |       158 |       223 | 
-    ##              |     26,57 |     32,05 |           | 
-    ##              |      0,29 |      0,71 |      0,61 | 
-    ##              |      0,33 |      0,96 |           | 
-    ##              |      0,18 |      0,43 |           | 
+    ##     Positive |        95 |       225 |       320 | 
+    ##              |     37.72 |     46.46 |           | 
+    ##              |      0.30 |      0.70 |      0.62 | 
+    ##              |      0.33 |      0.97 |           | 
+    ##              |      0.18 |      0.43 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       199 |       165 |       364 | 
-    ##              |      0,55 |      0,45 |           | 
+    ## Column Total |       287 |       233 |       520 | 
+    ##              |      0.55 |      0.45 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1392,11 +964,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  151,3192     d.f. =  1     p =  8,925156e-35 
+    ## Chi^2 =  218.8448     d.f. =  1     p =  1.615687e-49 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  148,6722     d.f. =  1     p =  3,382136e-34 
+    ## Chi^2 =  216.1716     d.f. =  1     p =  6.18701e-49 
     ## 
     ##  
     ## 
@@ -1411,26 +983,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | sudden.weight.loss 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       124 |        17 |       141 | 
-    ##              |     16,80 |     26,26 |           | 
-    ##              |      0,88 |      0,12 |      0,39 | 
-    ##              |      0,56 |      0,12 |           | 
-    ##              |      0,34 |      0,05 |           | 
+    ##     Negative |       171 |        29 |       200 | 
+    ##              |     25.45 |     35.54 |           | 
+    ##              |      0.85 |      0.14 |      0.38 | 
+    ##              |      0.56 |      0.13 |           | 
+    ##              |      0.33 |      0.06 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |        98 |       125 |       223 | 
-    ##              |     10,62 |     16,60 |           | 
-    ##              |      0,44 |      0,56 |      0,61 | 
-    ##              |      0,44 |      0,88 |           | 
-    ##              |      0,27 |      0,34 |           | 
+    ##     Positive |       132 |       188 |       320 | 
+    ##              |     15.91 |     22.21 |           | 
+    ##              |      0.41 |      0.59 |      0.62 | 
+    ##              |      0.44 |      0.87 |           | 
+    ##              |      0.25 |      0.36 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       222 |       142 |       364 | 
-    ##              |      0,61 |      0,39 |           | 
+    ## Column Total |       303 |       217 |       520 | 
+    ##              |      0.58 |      0.42 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1439,11 +1011,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  70,27998     d.f. =  1     p =  5,145726e-17 
+    ## Chi^2 =  99.10772     d.f. =  1     p =  2.391337e-23 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  68,44294     d.f. =  1     p =  1,306026e-16 
+    ## Chi^2 =  97.2963     d.f. =  1     p =  5.969166e-23 
     ## 
     ##  
     ## 
@@ -1458,26 +1030,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | weakness 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |        82 |        59 |       141 | 
-    ##              |      8,03 |      5,96 |           | 
-    ##              |      0,58 |      0,42 |      0,39 | 
-    ##              |      0,53 |      0,28 |           | 
-    ##              |      0,23 |      0,16 |           | 
+    ##     Negative |       113 |        87 |       200 | 
+    ##              |     11.11 |      7.83 |           | 
+    ##              |      0.56 |      0.43 |      0.38 | 
+    ##              |      0.53 |      0.29 |           | 
+    ##              |      0.22 |      0.17 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |        73 |       150 |       223 | 
-    ##              |      5,08 |      3,77 |           | 
-    ##              |      0,33 |      0,67 |      0,61 | 
-    ##              |      0,47 |      0,72 |           | 
-    ##              |      0,20 |      0,41 |           | 
+    ##     Positive |       102 |       218 |       320 | 
+    ##              |      6.94 |      4.89 |           | 
+    ##              |      0.32 |      0.68 |      0.62 | 
+    ##              |      0.47 |      0.71 |           | 
+    ##              |      0.20 |      0.42 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       155 |       209 |       364 | 
-    ##              |      0,43 |      0,57 |           | 
+    ## Column Total |       215 |       305 |       520 | 
+    ##              |      0.41 |      0.59 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1486,11 +1058,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  22,83069     d.f. =  1     p =  1,769178e-06 
+    ## Chi^2 =  30.77496     d.f. =  1     p =  2.897527e-08 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  21,80282     d.f. =  1     p =  3,021555e-06 
+    ## Chi^2 =  29.76792     d.f. =  1     p =  4.869843e-08 
     ## 
     ##  
     ## 
@@ -1505,26 +1077,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | Polyphagia 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       110 |        31 |       141 | 
-    ##              |     12,51 |     15,77 |           | 
-    ##              |      0,78 |      0,22 |      0,39 | 
-    ##              |      0,54 |      0,19 |           | 
-    ##              |      0,30 |      0,09 |           | 
+    ##     Negative |       152 |        48 |       200 | 
+    ##              |     17.11 |     20.43 |           | 
+    ##              |      0.76 |      0.24 |      0.38 | 
+    ##              |      0.54 |      0.20 |           | 
+    ##              |      0.29 |      0.09 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |        93 |       130 |       223 | 
-    ##              |      7,91 |      9,97 |           | 
-    ##              |      0,42 |      0,58 |      0,61 | 
-    ##              |      0,46 |      0,81 |           | 
-    ##              |      0,26 |      0,36 |           | 
+    ##     Positive |       131 |       189 |       320 | 
+    ##              |     10.69 |     12.77 |           | 
+    ##              |      0.41 |      0.59 |      0.62 | 
+    ##              |      0.46 |      0.80 |           | 
+    ##              |      0.25 |      0.36 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       203 |       161 |       364 | 
-    ##              |      0,56 |      0,44 |           | 
+    ## Column Total |       283 |       237 |       520 | 
+    ##              |      0.54 |      0.46 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1533,11 +1105,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  46,16996     d.f. =  1     p =  1,084268e-11 
+    ## Chi^2 =  61.00063     d.f. =  1     p =  5.705666e-15 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  44,70969     d.f. =  1     p =  2,285237e-11 
+    ## Chi^2 =  59.59525     d.f. =  1     p =  1.165158e-14 
     ## 
     ##  
     ## 
@@ -1552,26 +1124,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | Genital.thrush 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       117 |        24 |       141 | 
-    ##              |      0,31 |      1,14 |           | 
-    ##              |      0,83 |      0,17 |      0,39 | 
-    ##              |      0,41 |      0,31 |           | 
-    ##              |      0,32 |      0,07 |           | 
+    ##     Negative |       167 |        33 |       200 | 
+    ##              |      0.87 |      3.02 |           | 
+    ##              |      0.83 |      0.16 |      0.38 | 
+    ##              |      0.41 |      0.28 |           | 
+    ##              |      0.32 |      0.06 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |       170 |        53 |       223 | 
-    ##              |      0,19 |      0,72 |           | 
-    ##              |      0,76 |      0,24 |      0,61 | 
-    ##              |      0,59 |      0,69 |           | 
-    ##              |      0,47 |      0,15 |           | 
+    ##     Positive |       237 |        83 |       320 | 
+    ##              |      0.54 |      1.89 |           | 
+    ##              |      0.74 |      0.26 |      0.62 | 
+    ##              |      0.59 |      0.72 |           | 
+    ##              |      0.46 |      0.16 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       287 |        77 |       364 | 
-    ##              |      0,79 |      0,21 |           | 
+    ## Column Total |       404 |       116 |       520 | 
+    ##              |      0.78 |      0.22 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1580,11 +1152,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  2,356601     d.f. =  1     p =  0,1247537 
+    ## Chi^2 =  6.324962     d.f. =  1     p =  0.01190501 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  1,96952     d.f. =  1     p =  0,1604988 
+    ## Chi^2 =  5.792149     d.f. =  1     p =  0.0160979 
     ## 
     ##  
     ## 
@@ -1599,26 +1171,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | visual.blurring 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       100 |        41 |       141 | 
-    ##              |      6,81 |      8,22 |           | 
-    ##              |      0,71 |      0,29 |      0,39 | 
-    ##              |      0,50 |      0,25 |           | 
-    ##              |      0,27 |      0,11 |           | 
+    ##     Negative |       142 |        58 |       200 | 
+    ##              |      9.05 |     11.15 |           | 
+    ##              |      0.71 |      0.29 |      0.38 | 
+    ##              |      0.49 |      0.25 |           | 
+    ##              |      0.27 |      0.11 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |        99 |       124 |       223 | 
-    ##              |      4,31 |      5,19 |           | 
-    ##              |      0,44 |      0,56 |      0,61 | 
-    ##              |      0,50 |      0,75 |           | 
-    ##              |      0,27 |      0,34 |           | 
+    ##     Positive |       145 |       175 |       320 | 
+    ##              |      5.66 |      6.97 |           | 
+    ##              |      0.45 |      0.55 |      0.62 | 
+    ##              |      0.51 |      0.75 |           | 
+    ##              |      0.28 |      0.34 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       199 |       165 |       364 | 
-    ##              |      0,55 |      0,45 |           | 
+    ## Column Total |       287 |       233 |       520 | 
+    ##              |      0.55 |      0.45 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1627,11 +1199,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  24,52882     d.f. =  1     p =  7,320668e-07 
+    ## Chi^2 =  32.83894     d.f. =  1     p =  1.001189e-08 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  23,47006     d.f. =  1     p =  1,268727e-06 
+    ## Chi^2 =  31.80846     d.f. =  1     p =  1.701504e-08 
     ## 
     ##  
     ## 
@@ -1646,26 +1218,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | Itching 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |        74 |        67 |       141 | 
-    ##              |      0,01 |      0,01 |           | 
-    ##              |      0,52 |      0,48 |      0,39 | 
-    ##              |      0,38 |      0,39 |           | 
-    ##              |      0,20 |      0,18 |           | 
+    ##     Negative |       101 |        99 |       200 | 
+    ##              |      0.03 |      0.03 |           | 
+    ##              |      0.50 |      0.49 |      0.38 | 
+    ##              |      0.38 |      0.39 |           | 
+    ##              |      0.19 |      0.19 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |       119 |       104 |       223 | 
-    ##              |      0,00 |      0,01 |           | 
-    ##              |      0,53 |      0,47 |      0,61 | 
-    ##              |      0,62 |      0,61 |           | 
-    ##              |      0,33 |      0,29 |           | 
+    ##     Positive |       166 |       154 |       320 | 
+    ##              |      0.02 |      0.02 |           | 
+    ##              |      0.52 |      0.48 |      0.62 | 
+    ##              |      0.62 |      0.61 |           | 
+    ##              |      0.32 |      0.30 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       193 |       171 |       364 | 
-    ##              |      0,53 |      0,47 |           | 
+    ## Column Total |       267 |       253 |       520 | 
+    ##              |      0.51 |      0.49 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1674,11 +1246,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  0,02691433     d.f. =  1     p =  0,8696872 
+    ## Chi^2 =  0.09314444     d.f. =  1     p =  0.7602171 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  0,003165711     d.f. =  1     p =  0,955131 
+    ## Chi^2 =  0.04623544     d.f. =  1     p =  0.8297484 
     ## 
     ##  
     ## 
@@ -1693,26 +1265,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | Irritability 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       128 |        13 |       141 | 
-    ##              |      3,99 |     12,72 |           | 
-    ##              |      0,91 |      0,09 |      0,39 | 
-    ##              |      0,46 |      0,15 |           | 
-    ##              |      0,35 |      0,04 |           | 
+    ##     Negative |       184 |        16 |       200 | 
+    ##              |      6.95 |     21.74 |           | 
+    ##              |      0.92 |      0.08 |      0.38 | 
+    ##              |      0.47 |      0.13 |           | 
+    ##              |      0.35 |      0.03 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |       149 |        74 |       223 | 
-    ##              |      2,53 |      8,04 |           | 
-    ##              |      0,67 |      0,33 |      0,61 | 
-    ##              |      0,54 |      0,85 |           | 
-    ##              |      0,41 |      0,20 |           | 
+    ##     Positive |       210 |       110 |       320 | 
+    ##              |      4.35 |     13.59 |           | 
+    ##              |      0.66 |      0.34 |      0.62 | 
+    ##              |      0.53 |      0.87 |           | 
+    ##              |      0.40 |      0.21 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       277 |        87 |       364 | 
-    ##              |      0,76 |      0,24 |           | 
+    ## Column Total |       394 |       126 |       520 | 
+    ##              |      0.76 |      0.24 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1721,11 +1293,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  27,27375     d.f. =  1     p =  1,765924e-07 
+    ## Chi^2 =  46.63387     d.f. =  1     p =  8.556828e-12 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  25,97213     d.f. =  1     p =  3,463824e-07 
+    ## Chi^2 =  45.20835     d.f. =  1     p =  1.771483e-11 
     ## 
     ##  
     ## 
@@ -1740,26 +1312,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | delayed.healing 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |        85 |        56 |       141 | 
-    ##              |      0,20 |      0,27 |           | 
-    ##              |      0,60 |      0,40 |      0,39 | 
-    ##              |      0,41 |      0,36 |           | 
-    ##              |      0,23 |      0,15 |           | 
+    ##     Negative |       114 |        86 |       200 | 
+    ##              |      0.32 |      0.38 |           | 
+    ##              |      0.57 |      0.43 |      0.38 | 
+    ##              |      0.41 |      0.36 |           | 
+    ##              |      0.22 |      0.17 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |       124 |        99 |       223 | 
-    ##              |      0,13 |      0,17 |           | 
-    ##              |      0,56 |      0,44 |      0,61 | 
-    ##              |      0,59 |      0,64 |           | 
-    ##              |      0,34 |      0,27 |           | 
+    ##     Positive |       167 |       153 |       320 | 
+    ##              |      0.20 |      0.24 |           | 
+    ##              |      0.52 |      0.48 |      0.62 | 
+    ##              |      0.59 |      0.64 |           | 
+    ##              |      0.32 |      0.29 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       209 |       155 |       364 | 
-    ##              |      0,57 |      0,43 |           | 
+    ## Column Total |       281 |       239 |       520 | 
+    ##              |      0.54 |      0.46 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1768,11 +1340,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  0,7732586     d.f. =  1     p =  0,3792109 
+    ## Chi^2 =  1.147679     d.f. =  1     p =  0.2840355 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  0,5937522     d.f. =  1     p =  0,4409718 
+    ## Chi^2 =  0.9620937     d.f. =  1     p =  0.3266599 
     ## 
     ##  
     ## 
@@ -1787,26 +1359,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | partial.paresis 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       121 |        20 |       141 | 
-    ##              |     19,33 |     26,36 |           | 
-    ##              |      0,86 |      0,14 |      0,39 | 
-    ##              |      0,58 |      0,13 |           | 
-    ##              |      0,33 |      0,05 |           | 
+    ##     Negative |       168 |        32 |       200 | 
+    ##              |     25.76 |     34.04 |           | 
+    ##              |      0.84 |      0.16 |      0.38 | 
+    ##              |      0.57 |      0.14 |           | 
+    ##              |      0.32 |      0.06 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |        89 |       134 |       223 | 
-    ##              |     12,22 |     16,67 |           | 
-    ##              |      0,40 |      0,60 |      0,61 | 
-    ##              |      0,42 |      0,87 |           | 
-    ##              |      0,24 |      0,37 |           | 
+    ##     Positive |       128 |       192 |       320 | 
+    ##              |     16.10 |     21.27 |           | 
+    ##              |      0.40 |      0.60 |      0.62 | 
+    ##              |      0.43 |      0.86 |           | 
+    ##              |      0.25 |      0.37 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       210 |       154 |       364 | 
-    ##              |      0,58 |      0,42 |           | 
+    ## Column Total |       296 |       224 |       520 | 
+    ##              |      0.57 |      0.43 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1815,11 +1387,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  74,57801     d.f. =  1     p =  5,828885e-18 
+    ## Chi^2 =  97.17375     d.f. =  1     p =  6.350314e-23 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  72,70914     d.f. =  1     p =  1,502365e-17 
+    ## Chi^2 =  95.38763     d.f. =  1     p =  1.565289e-22 
     ## 
     ##  
     ## 
@@ -1834,26 +1406,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | muscle.stiffness 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |        98 |        43 |       141 | 
-    ##              |      0,60 |      1,07 |           | 
-    ##              |      0,70 |      0,30 |      0,39 | 
-    ##              |      0,42 |      0,33 |           | 
-    ##              |      0,27 |      0,12 |           | 
+    ##     Negative |       140 |        60 |       200 | 
+    ##              |      1.80 |      3.00 |           | 
+    ##              |      0.70 |      0.30 |      0.38 | 
+    ##              |      0.43 |      0.31 |           | 
+    ##              |      0.27 |      0.12 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |       136 |        87 |       223 | 
-    ##              |      0,38 |      0,68 |           | 
-    ##              |      0,61 |      0,39 |      0,61 | 
-    ##              |      0,58 |      0,67 |           | 
-    ##              |      0,37 |      0,24 |           | 
+    ##     Positive |       185 |       135 |       320 | 
+    ##              |      1.12 |      1.88 |           | 
+    ##              |      0.58 |      0.42 |      0.62 | 
+    ##              |      0.57 |      0.69 |           | 
+    ##              |      0.36 |      0.26 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       234 |       130 |       364 | 
-    ##              |      0,64 |      0,36 |           | 
+    ## Column Total |       325 |       195 |       520 | 
+    ##              |      0.62 |      0.38 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1862,11 +1434,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  2,729225     d.f. =  1     p =  0,09852708 
+    ## Chi^2 =  7.8     d.f. =  1     p =  0.005224623 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  2,370868     d.f. =  1     p =  0,1236183 
+    ## Chi^2 =  7.288667     d.f. =  1     p =  0.006939096 
     ## 
     ##  
     ## 
@@ -1881,26 +1453,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | Alopecia 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |        75 |        66 |       141 | 
-    ##              |      4,17 |      8,59 |           | 
-    ##              |      0,53 |      0,47 |      0,39 | 
-    ##              |      0,31 |      0,55 |           | 
-    ##              |      0,21 |      0,18 |           | 
+    ##     Negative |        99 |       101 |       200 | 
+    ##              |      7.88 |     15.02 |           | 
+    ##              |      0.49 |      0.50 |      0.38 | 
+    ##              |      0.29 |      0.56 |           | 
+    ##              |      0.19 |      0.19 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |       170 |        53 |       223 | 
-    ##              |      2,64 |      5,43 |           | 
-    ##              |      0,76 |      0,24 |      0,61 | 
-    ##              |      0,69 |      0,45 |           | 
-    ##              |      0,47 |      0,15 |           | 
+    ##     Positive |       242 |        78 |       320 | 
+    ##              |      4.93 |      9.39 |           | 
+    ##              |      0.76 |      0.24 |      0.62 | 
+    ##              |      0.71 |      0.44 |           | 
+    ##              |      0.47 |      0.15 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       245 |       119 |       364 | 
-    ##              |      0,67 |      0,33 |           | 
+    ## Column Total |       341 |       179 |       520 | 
+    ##              |      0.66 |      0.34 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1909,11 +1481,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  20,84208     d.f. =  1     p =  4,987493e-06 
+    ## Chi^2 =  37.21247     d.f. =  1     p =  1.059342e-09 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  19,8081     d.f. =  1     p =  8,561917e-06 
+    ## Chi^2 =  36.06414     d.f. =  1     p =  1.909279e-09 
     ## 
     ##  
     ## 
@@ -1928,26 +1500,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | Obesity 
-    ##        class |       Não |       Sim | Row Total | 
+    ##        class |        No |       Yes | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       120 |        21 |       141 | 
-    ##              |      0,08 |      0,38 |           | 
-    ##              |      0,85 |      0,15 |      0,39 | 
-    ##              |      0,40 |      0,34 |           | 
-    ##              |      0,33 |      0,06 |           | 
+    ##     Negative |       173 |        27 |       200 | 
+    ##              |      0.28 |      1.38 |           | 
+    ##              |      0.86 |      0.14 |      0.38 | 
+    ##              |      0.40 |      0.31 |           | 
+    ##              |      0.33 |      0.05 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |       182 |        41 |       223 | 
-    ##              |      0,05 |      0,24 |           | 
-    ##              |      0,82 |      0,18 |      0,61 | 
-    ##              |      0,60 |      0,66 |           | 
-    ##              |      0,50 |      0,11 |           | 
+    ##     Positive |       259 |        61 |       320 | 
+    ##              |      0.18 |      0.87 |           | 
+    ##              |      0.81 |      0.19 |      0.62 | 
+    ##              |      0.60 |      0.69 |           | 
+    ##              |      0.50 |      0.12 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       302 |        62 |       364 | 
-    ##              |      0,83 |      0,17 |           | 
+    ## Column Total |       432 |        88 |       520 | 
+    ##              |      0.83 |      0.17 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -1956,11 +1528,11 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  0,7453898     d.f. =  1     p =  0,3879398 
+    ## Chi^2 =  2.708675     d.f. =  1     p =  0.09980384 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  0,5187639     d.f. =  1     p =  0,4713695 
+    ## Chi^2 =  2.327474     d.f. =  1     p =  0.127108 
     ## 
     ##  
     ## 
@@ -1975,26 +1547,26 @@ for(i in var.fct[-1]){
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  364 
+    ## Total Observations in Table:  520 
     ## 
     ##  
     ##              | class 
-    ##        class |  Positivo |  Negativo | Row Total | 
+    ##        class |  Negative |  Positive | Row Total | 
     ## -------------|-----------|-----------|-----------|
-    ##     Positivo |       141 |         0 |       141 | 
-    ##              |    136,62 |     86,38 |           | 
-    ##              |      1,00 |      0,00 |      0,39 | 
-    ##              |      1,00 |      0,00 |           | 
-    ##              |      0,39 |      0,00 |           | 
+    ##     Negative |       200 |         0 |       200 | 
+    ##              |    196.92 |    123.08 |           | 
+    ##              |      1.00 |      0.00 |      0.38 | 
+    ##              |      1.00 |      0.00 |           | 
+    ##              |      0.38 |      0.00 |           | 
     ## -------------|-----------|-----------|-----------|
-    ##     Negativo |         0 |       223 |       223 | 
-    ##              |     86,38 |     54,62 |           | 
-    ##              |      0,00 |      1,00 |      0,61 | 
-    ##              |      0,00 |      1,00 |           | 
-    ##              |      0,00 |      0,61 |           | 
+    ##     Positive |         0 |       320 |       320 | 
+    ##              |    123.08 |     76.92 |           | 
+    ##              |      0.00 |      1.00 |      0.62 | 
+    ##              |      0.00 |      1.00 |           | 
+    ##              |      0.00 |      0.62 |           | 
     ## -------------|-----------|-----------|-----------|
-    ## Column Total |       141 |       223 |       364 | 
-    ##              |      0,39 |      0,61 |           | 
+    ## Column Total |       200 |       320 |       520 | 
+    ##              |      0.38 |      0.62 |           | 
     ## -------------|-----------|-----------|-----------|
     ## 
     ##  
@@ -2003,15 +1575,13 @@ for(i in var.fct[-1]){
     ## 
     ## Pearson's Chi-squared test 
     ## ------------------------------------------------------------
-    ## Chi^2 =  364     d.f. =  1     p =  3,789733e-81 
+    ## Chi^2 =  520     d.f. =  1     p =  4.231963e-115 
     ## 
     ## Pearson's Chi-squared test with Yates' continuity correction 
     ## ------------------------------------------------------------
-    ## Chi^2 =  359,7983     d.f. =  1     p =  3,115251e-80 
+    ## Chi^2 =  515.7836     d.f. =  1     p =  3.498538e-114 
     ## 
     ## 
-
-------------------------------------------------------------------------
 
 ### Duas Numéricas
 
@@ -2027,8 +1597,6 @@ Sua associação pode ser *quantificada* utilizando-se uma medida
 estatística chamada ***coeficiente de correlação*** ou *grau de
 associação*.
 
-------------------------------------------------------------------------
-
 #### Diagramas de Dispersão
 
 A ***relação*** entre as variáveis pode ser *fortemente linear*, *não
@@ -2038,12 +1606,10 @@ associação entre duas variáveis***.
 
 ``` r
 # Diagramas de Dispersão - Matriz de Correlação
-plot(aed.trn[])
+plot(df[,c(var.num, var.num_con)])
 ```
 
-![](project_files/figure-markdown_github/Matriz%20de%20Correlação-1.png)
-
-------------------------------------------------------------------------
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Matriz%20de%20Correlação-1.png)<!-- -->
 
 #### Coeficiente de Correlação
 
@@ -2056,24 +1622,53 @@ O coeficiente de correlação “R” assume um valor entre \[– 1 e + 1\],
 isto é:
 
 -   Se r = 1, a correlação é positiva perfeita;
-
 -   Se r = -1, a correlação é negativa perfeita;
-
 -   Se r = 0, a correlação é nula.
 
 ``` r
-# Tabela dos Coeficientes de Correlação
-cor(aed.trn[var.num])
+# Coeficiente de Correlação - feature numérico x target categórico
+cor(df$Age,
+    df[target_names] %>% unlist() %>% as.numeric())
 ```
 
-    ##     Age
-    ## Age   1
+    ## [1] 0.108679
 
-------------------------------------------------------------------------
+``` r
+# var, cov e cor calculam a variância de x e a covariância ou correlação de x e y se esses forem vetores. 
+# Se x e y são matrizes, então as covariâncias (ou correlações) entre as colunas de x e as colunas de y são calculadas.
+```
+
+``` r
+# Gráfico dos Coeficientes de Correlação
+# df[target_names] = df[target_names] %>% unlist() %>% as.numeric()
+# cor.plot(df[,c(var.num, target_names)])
+df[target_names] = df[target_names] %>% unlist() %>% as.numeric()
+df[feature_names] = df[feature_names] %>% unlist() %>% as.numeric()
+M = cor(df[,c(feature_names, target_names)])
+```
+
+``` r
+corrplot(M, method = 'color')
+```
+
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 #### Covariância
 
-------------------------------------------------------------------------
+``` r
+cov(df[,c(var.num, target_names)])
+```
+
+    ##               Age     class
+    ## Age   147.6581258 0.6431006
+    ## class   0.6431006 0.2371424
+
+``` r
+# Diagramas de Dispersão + Coeficientes de Correlação
+pairs.panels(df[,c(var.num, target_names)])
+```
+
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Diagramas%20de%20Dispersão%20+%20Coeficientes%20de%20Correlação-1.png)<!-- -->
 
 ### Uma Númerica e outra Categórica
 
@@ -2085,38 +1680,37 @@ As medidas-resumo são agrupadas por categoria da variável qualitativa. A
 partir daí, constroem-se boxplots baseados em cada medida-resumo. Então,
 os boxplots são comparados visualmente.
 
-------------------------------------------------------------------------
-
 #### Medidas-resumo
 
 *As medidas-resumo são calculadas para a variável quantitativa, a
 variável que se quer observar o comportamento.*
 
-------------------------------------------------------------------------
-
 #### Boxplot
 
 ``` r
-# Boxplots Idade conforme as Categóricas
+# Boxplots valor conforme as Categóricas
 par(mfrow=c(1,3), cex = 0.65)
 for(i in var.fct){
-  boxplot(aed.trn$Age ~ aed.trn[,i], beside = TRUE, xlab = names(aed.trn)[grep(i, names(aed.trn))])
+  boxplot(df[,var.num] ~ df[,i], 
+          beside = TRUE, 
+          xlab = names(df)[grep(i, names(df))],
+          ylab = names(df)[grep(var.num, names(df))])
 }
 ```
 
-![](project_files/figure-markdown_github/Gráficos%20de%20Caixa%20Age%20x%20Categóricas-1.png)![](project_files/figure-markdown_github/Gráficos%20de%20Caixa%20Age%20x%20Categóricas-2.png)![](project_files/figure-markdown_github/Gráficos%20de%20Caixa%20Age%20x%20Categóricas-3.png)![](project_files/figure-markdown_github/Gráficos%20de%20Caixa%20Age%20x%20Categóricas-4.png)![](project_files/figure-markdown_github/Gráficos%20de%20Caixa%20Age%20x%20Categóricas-5.png)![](project_files/figure-markdown_github/Gráficos%20de%20Caixa%20Age%20x%20Categóricas-6.png)
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numericas%20x%20Categóricas-1.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numericas%20x%20Categóricas-2.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numericas%20x%20Categóricas-3.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numericas%20x%20Categóricas-4.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numericas%20x%20Categóricas-5.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numericas%20x%20Categóricas-6.png)<!-- -->
 
 ``` r
 # Boxplots Numéricas conforme as Survived
-# par(mfrow=c(2,2))
-for(i in 0:length(aed.trn)){
-  if(is.numeric(aed.trn[,i])){
-    boxplot(aed.trn[,i] ~ class, ylab = names(aed.trn)[i], data = aed.trn)
+par(mfrow=c(1,1))
+for(i in 0:length(df)){
+  if(is.numeric(df[,i])){
+    boxplot(df[,i] ~ class, ylab = names(df)[i], data = df)
   }
 }
 ```
 
-![](project_files/figure-markdown_github/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-1.png)
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-1.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-2.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-3.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-4.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-5.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-6.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-7.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-8.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-9.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-10.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-11.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-12.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-13.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-14.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-15.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-16.png)<!-- -->![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Gráficos%20de%20Caixa%20Numéricas%20x%20Survived-17.png)<!-- -->
 
 -   Intervalo Interquartil (IQ): Diferença entre o 3º e o 1º quartil. O
     comprimento do lado vertical.
@@ -2144,15 +1738,7 @@ for(i in 0:length(aed.trn)){
     4.  Simetria da variável baseada na distância dos quartis até a
         mediana.
 
-``` r
-dput(aed.trn, file = "datasets/aed_trn.R")
-```
-
-------------------------------------------------------------------------
-
 # Pré-Processamento
-
-------------------------------------------------------------------------
 
 ## Escala e Normalização
 
@@ -2168,16 +1754,16 @@ sem ele.
 -   Métodos: *[Feature
     Scaling](https://en.wikipedia.org/wiki/Feature_scaling)*
 
-    1.  **Re-escalonar (Normalização Min-Max):** é o método mais simples
+    4.  **Re-escalonar (Normalização Min-Max):** é o método mais simples
         e consiste em redimensionar o intervalo de recursos para
         dimensionar o intervalo em \[0, 1\] ou \[-1, 1\].
 
-    2.  **Escore-Z (Padronização):** No aprendizado de máquina, podemos
+    5.  **Escore-Z (Padronização):** No aprendizado de máquina, podemos
         lidar com vários tipos de dados, por exemplo, sinais de áudio e
         valores de pixel para dados de imagem, e esses dados podem
-        incluir várias dimensões. *A padronização de recursos faz com
-        que os valores de cada recurso nos dados tenham média zero* (ao
-        subtrair a média no numerador) *e variação de unidade*. Esse
+        incluir várias dimensões. A padronização de recursos faz com que
+        os valores de cada recurso nos dados tenham média zero (ao
+        subtrair a média no numerador) e variação de unidade. Esse
         método é amplamente utilizado para normalização em muitos
         algoritmos de aprendizado de máquina (por exemplo, máquinas de
         vetores de suporte, regressão logística e redes neurais
@@ -2191,15 +1777,112 @@ sem ele.
 
 ### Padronização (Z-Score)
 
+``` r
+Z_df <- dget(file = "data/df.R")
+# ------------------------------------------------------------------------------
+
+# Padroniza
+Z_df[c(var.num, var.num_con)] <- sapply(Z_df[c(var.num, var.num_con)], scale)
+```
+
+``` r
+# Exporta Dados Padronizados
+dput(Z_df, file = "data/Z_df.R")
+```
+
+``` r
+print('Original:')
+```
+
+    ## [1] "Original:"
+
+``` r
+stargazer(df, type = "text")
+```
+
+    ## 
+    ## ================================================================
+    ## Statistic           N   Mean  St. Dev. Min Pctl(25) Pctl(75) Max
+    ## ----------------------------------------------------------------
+    ## Age                520 48.029  12.151  16     39       57    90 
+    ## Gender             520 1.631   0.483    1     1        2      2 
+    ## Polyuria           520 1.496   0.500    1     1        2      2 
+    ## Polydipsia         520 1.448   0.498    1     1        2      2 
+    ## sudden.weight.loss 520 1.417   0.494    1     1        2      2 
+    ## weakness           520 1.587   0.493    1     1        2      2 
+    ## Polyphagia         520 1.456   0.499    1     1        2      2 
+    ## Genital.thrush     520 1.223   0.417    1     1        1      2 
+    ## visual.blurring    520 1.448   0.498    1     1        2      2 
+    ## Itching            520 1.487   0.500    1     1        2      2 
+    ## Irritability       520 1.242   0.429    1     1        1      2 
+    ## delayed.healing    520 1.460   0.499    1     1        2      2 
+    ## partial.paresis    520 1.431   0.496    1     1        2      2 
+    ## muscle.stiffness   520 1.375   0.485    1     1        2      2 
+    ## Alopecia           520 1.344   0.476    1     1        2      2 
+    ## Obesity            520 1.169   0.375    1     1        1      2 
+    ## class              520 1.615   0.487    1     1        2      2 
+    ## ----------------------------------------------------------------
+
+``` r
+print('Padronizado:')
+```
+
+    ## [1] "Padronizado:"
+
+``` r
+stargazer(Z_df, type = "text")
+```
+
+    ## 
+    ## ===========================================================
+    ## Statistic  N  Mean  St. Dev.  Min   Pctl(25) Pctl(75)  Max 
+    ## -----------------------------------------------------------
+    ## Age       520 0.000  1.000   -2.636  -0.743   0.738   3.454
+    ## -----------------------------------------------------------
+
+## Train, Test, Split
+
+``` r
+# Packages
+# ==============================================================================
+## install.packages("caret")
+#library(caret) 
+## install.packages("kernlab")
+#library(kernlab)
+# ==============================================================================
+
+# Carrega conjuntos de dados especificados 
+# ou lista os conjuntos de dados disponíveis.
+#data(df)
+#df = Z_df
+
+# Cria uma série de partições de teste / treinamento
+inTrain <- createDataPartition(y = df$class, # Um vetor de resultados.
+                               p = 0.75,     # Percentual para treino.
+                               list = FALSE)
+
+# Coloca cada partição em um dataframe diferente
+training <- df[inTrain,]
+testing <- df[-inTrain,]
+
+dim(training)
+```
+
+    ## [1] 390  17
+
+``` r
+# Exporta os dados
+dput(training, file = "data/training.R")
+dput(testing,  file = "data/testing.R")
+```
+
 ## Feature Selection
 
 # Modelagem
 
 ``` r
-#massa <- z.trn
-#mdl.tst <- z.tst
-massa <- aed.trn
-mdl.tst <- etl.tst
+massa <- training
+mdl.tst <- testing
 ```
 
 ------------------------------------------------------------------------
@@ -2290,7 +1973,7 @@ mdl.vld <- mdl.vld[ , -col_idx]
 ``` r
 # Gerar Modelos de Classificação
 ajt.trn <- glm(formula = class ~ .,
-               family = binomial(link = "logit"), 
+               family = gaussian,
                data = mdl.trn)
 ```
 
@@ -2302,41 +1985,41 @@ summary(ajt.trn)
 
     ## 
     ## Call:
-    ## glm(formula = class ~ ., family = binomial(link = "logit"), data = mdl.trn)
+    ## glm(formula = class ~ ., family = gaussian, data = mdl.trn)
     ## 
     ## Deviance Residuals: 
     ##      Min        1Q    Median        3Q       Max  
-    ## -2,68067  -0,13619   0,00011   0,01543   2,86335  
+    ## -0.63942  -0.18024  -0.06404   0.17182   0.95921  
     ## 
     ## Coefficients:
-    ##                       Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)            7,72194    2,44800   3,154 0,001608 ** 
-    ## Age                   -0,12597    0,04820  -2,613 0,008966 ** 
-    ## GenderMulher          -7,34476    1,39188  -5,277 1,31e-07 ***
-    ## PolyuriaSim            6,63816    1,56514   4,241 2,22e-05 ***
-    ## PolydipsiaSim          8,51908    1,81503   4,694 2,68e-06 ***
-    ## sudden.weight.lossSim  1,18343    1,03481   1,144 0,252782    
-    ## weaknessSim           -0,05447    0,99314  -0,055 0,956258    
-    ## PolyphagiaSim          2,62843    1,05133   2,500 0,012416 *  
-    ## Genital.thrushSim      1,34283    1,00844   1,332 0,182995    
-    ## visual.blurringSim     0,60005    1,05789   0,567 0,570569    
-    ## ItchingSim            -4,27563    1,39418  -3,067 0,002164 ** 
-    ## IrritabilitySim        3,56113    1,06187   3,354 0,000798 ***
-    ## delayed.healingSim    -0,71266    0,99647  -0,715 0,474496    
-    ## partial.paresisSim     1,33057    0,86951   1,530 0,125953    
-    ## muscle.stiffnessSim   -1,10156    1,21540  -0,906 0,364758    
-    ## AlopeciaSim            0,96801    1,17464   0,824 0,409889    
-    ## ObesitySim            -0,61650    0,88646  -0,695 0,486768    
+    ##                     Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)         0.809587   0.130725   6.193 1.83e-09 ***
+    ## Age                 0.001014   0.001670   0.607 0.544140    
+    ## Gender             -0.259993   0.038575  -6.740 7.53e-11 ***
+    ## Polyuria            0.294123   0.043389   6.779 5.95e-11 ***
+    ## Polydipsia          0.263893   0.047062   5.607 4.49e-08 ***
+    ## sudden.weight.loss  0.029548   0.038908   0.759 0.448155    
+    ## weakness            0.010102   0.039589   0.255 0.798759    
+    ## Polyphagia          0.072935   0.038696   1.885 0.060374 .  
+    ## Genital.thrush      0.235252   0.045179   5.207 3.46e-07 ***
+    ## visual.blurring     0.057552   0.041775   1.378 0.169276    
+    ## Itching            -0.125061   0.038717  -3.230 0.001368 ** 
+    ## Irritability        0.122403   0.039756   3.079 0.002260 ** 
+    ## delayed.healing    -0.132178   0.039528  -3.344 0.000925 ***
+    ## partial.paresis     0.133958   0.041014   3.266 0.001210 ** 
+    ## muscle.stiffness   -0.020352   0.038493  -0.529 0.597370    
+    ## Alopecia           -0.018793   0.044671  -0.421 0.674264    
+    ## Obesity            -0.068837   0.044562  -1.545 0.123409    
     ## ---
-    ## Signif. codes:  0 '***' 0,001 '**' 0,01 '*' 0,05 '.' 0,1 ' ' 1
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## (Dispersion parameter for binomial family taken to be 1)
+    ## (Dispersion parameter for gaussian family taken to be 0.08330428)
     ## 
-    ##     Null deviance: 418,574  on 312  degrees of freedom
-    ## Residual deviance:  70,048  on 296  degrees of freedom
-    ## AIC: 104,05
+    ##     Null deviance: 78.078  on 332  degrees of freedom
+    ## Residual deviance: 26.324  on 316  degrees of freedom
+    ## AIC: 135.97
     ## 
-    ## Number of Fisher Scoring iterations: 9
+    ## Number of Fisher Scoring iterations: 2
 
 ------------------------------------------------------------------------
 
@@ -2348,15 +2031,18 @@ summary(ajt.trn)
 > Validação*.
 
 ``` r
-pred <- predict( ajt.trn, 
-                     newdata = mdl.vld,
-                     type = "response" )
+pred <- predict(
+  ajt.trn, 
+  newdata = mdl.vld,
+  type = "response")
 
 # Criando um dataframe com os dados observados e os preditos.
-previsoes <- data.frame(observado = mdl.vld$class,
-                        previsto = pred %>% 
-                                      round() %>% 
-                                      factor(labels = c("Positivo", "Negativo")))
+previsoes <- data.frame(
+  observado = mdl.vld[,target_names] %>% factor(labels = c("Negative", "Positive")),
+  previsto = pred
+  %>% 
+    round() %>% 
+    factor(labels = c("Negative", "Positive")))
 ```
 
 ``` r
@@ -2376,42 +2062,43 @@ CrossTable(previsoes$observado,
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  51 
+    ## Total Observations in Table:  57 
     ## 
     ##  
     ##                     | previsoes$previsto 
-    ## previsoes$observado |  Positivo |  Negativo | Row Total | 
+    ## previsoes$observado |  Negative |  Positive | Row Total | 
     ## --------------------|-----------|-----------|-----------|
-    ##            Positivo |        17 |         2 |        19 | 
-    ##                     |     8,296 |     6,815 |           | 
-    ##                     |     0,895 |     0,105 |     0,373 | 
-    ##                     |     0,739 |     0,071 |           | 
-    ##                     |     0,333 |     0,039 |           | 
+    ##            Negative |        20 |         0 |        20 | 
+    ##                     |    14.372 |    11.228 |           | 
+    ##                     |     1.000 |     0.000 |     0.351 | 
+    ##                     |     0.800 |     0.000 |           | 
+    ##                     |     0.351 |     0.000 |           | 
     ## --------------------|-----------|-----------|-----------|
-    ##            Negativo |         6 |        26 |        32 | 
-    ##                     |     4,926 |     4,046 |           | 
-    ##                     |     0,188 |     0,812 |     0,627 | 
-    ##                     |     0,261 |     0,929 |           | 
-    ##                     |     0,118 |     0,510 |           | 
+    ##            Positive |         5 |        32 |        37 | 
+    ##                     |     7.769 |     6.069 |           | 
+    ##                     |     0.135 |     0.865 |     0.649 | 
+    ##                     |     0.200 |     1.000 |           | 
+    ##                     |     0.088 |     0.561 |           | 
     ## --------------------|-----------|-----------|-----------|
-    ##        Column Total |        23 |        28 |        51 | 
-    ##                     |     0,451 |     0,549 |           | 
+    ##        Column Total |        25 |        32 |        57 | 
+    ##                     |     0.439 |     0.561 |           | 
     ## --------------------|-----------|-----------|-----------|
     ## 
     ## 
 
 ``` r
-chisq.test(previsoes$observado, 
-           previsoes$previsto)
+chisq.test(previsoes$observado, previsoes$previsto)
 ```
 
     ## 
     ##  Pearson's Chi-squared test with Yates' continuity correction
     ## 
     ## data:  previsoes$observado and previsoes$previsto
-    ## X-squared = 21,312, df = 1, p-value = 3,903e-06
+    ## X-squared = 36.004, df = 1, p-value = 1.97e-09
 
-![](project_files/figure-markdown_github/unnamed-chunk-2-1.png)
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+------------------------------------------------------------------------
 
 ### Avaliação
 
@@ -2419,9 +2106,7 @@ Para avaliar o desempenho do modelo nos dados de validação, foi
 construída uma *matriz de confusão*.
 
 ``` r
-cm <- confusionMatrix(previsoes$observado, 
-                      previsoes$previsto, 
-                      positive = 'Positivo')
+cm <- confusionMatrix(previsoes$observado, previsoes$previsto, positive = 'Positive')
 ```
 
 Matriz de Confusão - Usando o pacote Caret
@@ -2433,34 +2118,36 @@ print(cm)
     ## Confusion Matrix and Statistics
     ## 
     ##           Reference
-    ## Prediction Positivo Negativo
-    ##   Positivo       17        2
-    ##   Negativo        6       26
-    ##                                           
-    ##                Accuracy : 0,8431          
-    ##                  95% CI : (0,7141, 0,9298)
-    ##     No Information Rate : 0,549           
-    ##     P-Value [Acc > NIR] : 8,783e-06       
-    ##                                           
-    ##                   Kappa : 0,6782          
-    ##                                           
-    ##  Mcnemar's Test P-Value : 0,2888          
-    ##                                           
-    ##             Sensitivity : 0,7391          
-    ##             Specificity : 0,9286          
-    ##          Pos Pred Value : 0,8947          
-    ##          Neg Pred Value : 0,8125          
-    ##              Prevalence : 0,4510          
-    ##          Detection Rate : 0,3333          
-    ##    Detection Prevalence : 0,3725          
-    ##       Balanced Accuracy : 0,8339          
-    ##                                           
-    ##        'Positive' Class : Positivo        
+    ## Prediction Negative Positive
+    ##   Negative       20        0
+    ##   Positive        5       32
+    ##                                          
+    ##                Accuracy : 0.9123         
+    ##                  95% CI : (0.807, 0.9709)
+    ##     No Information Rate : 0.5614         
+    ##     P-Value [Acc > NIR] : 7.06e-09       
+    ##                                          
+    ##                   Kappa : 0.8179         
+    ##                                          
+    ##  Mcnemar's Test P-Value : 0.07364        
+    ##                                          
+    ##             Sensitivity : 1.0000         
+    ##             Specificity : 0.8000         
+    ##          Pos Pred Value : 0.8649         
+    ##          Neg Pred Value : 1.0000         
+    ##              Prevalence : 0.5614         
+    ##          Detection Rate : 0.5614         
+    ##    Detection Prevalence : 0.6491         
+    ##       Balanced Accuracy : 0.9000         
+    ##                                          
+    ##        'Positive' Class : Positive       
     ## 
 
-Accuracy
+------------------------------------------------------------------------
 
-“Através da *Matriz de Confusão* obtivemos a Acurácia de ***84,31%***,
+***Accuracy***
+
+Através da *Matriz de Confusão* obtivemos a ***Acurácia de 91.23%***,
 ela corresponde a fração das premissas corretas em relação ao total de
 observações. Esta métrica também poderia ser calculada utilizando a
 função *table()* ou a função *CrossTable()*, pois ela corresponde a soma
@@ -2468,52 +2155,58 @@ das predições corretas dividida pelo total de observações.
 Porém, não é suficiente (e nem segura) para avaliarmos a eficiência do
 modelo. Analisamos então, outras métricas obtidas pela Confusion Matrix,
 que nos informe não apenas o percentual de acertos, mas também a
-precisão e a sensibilidade.”
+precisão e a sensibilidade.
+
+------------------------------------------------------------------------
 
 ***95% CI***
 
-O ***Intervalo de Confiança***, denotado por *95% CI*, é ***\[0,7141,
-0,9298\]***. Ele é uma *estimativa por intervalo* de um *parâmetro
+O ***Intervalo de Confiança***, denotado por *95% CI*, é ***\[0.807,
+0.9709\]***. Ele é uma *estimativa por intervalo* de um *parâmetro
 populacional*, que com dada frequência (*Nível de Confiança*), inclui o
 parâmetro de interesse. Nesse caso específico, significa dizer que 95%
 dos *intervalos de confiança* observados têm o valor real do parâmetro.
 
 ***No Information Rate***
 
-***P-Value \[Acc \> NIR\]***
+***P-Value \[Acc &gt; NIR\]***
 
 ***Kappa***
 
-O ***Teste de Concordância Kappa*** foi igual a ***0,6782***. O
+O ***Teste de Concordância Kappa*** foi igual a ***0.8179***. O
 coeficiente de Kappa tem a finalidade de medir o grau de concordância
 entre proporções. Ele demonstra se uma dada classificação pode ser
 considerada confiável.
 
 O seu valor pode ser interpretado por meio de uma tabela.
 
-Mcnemar’s Test P-Value
+------------------------------------------------------------------------
 
-Sensitivity
+***Mcnemar’s Test P-Value***
 
-Specificity
+------------------------------------------------------------------------
 
-Pos Pred Value
+***Sensitivity***
 
-Neg Pred Value
+***Specificity***
 
-Prevalence
+***Pos Pred Value***
 
-Detection Rate
+***Neg Pred Value***
 
-Detection Prevalence
+***Prevalence***
 
-Balanced Accuracy
+***Detection Rate***
+
+***Detection Prevalence***
+
+***Balanced Accuracy***
 
 ``` r
 fourfoldplot(cm$table)
 ```
 
-![](project_files/figure-markdown_github/Plot%20Confusion%20Matrix-1.png)
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Plot%20Confusion%20Matrix-1.png)<!-- -->
 
 ------------------------------------------------------------------------
 
@@ -2548,7 +2241,7 @@ chamada de β.
 mosaicplot(cm$table, color = TRUE, shade = TRUE, main = "Mosaico para Confusion Matrix")
 ```
 
-![](project_files/figure-markdown_github/Mosaico%20Confusion%20Matrix-1.png)
+![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Mosaico%20Confusion%20Matrix-1.png)<!-- -->
 
 A partir destas definições construímos as duas principais métricas, a
 ***Precisão*** e a ***Sensibilidade***.
@@ -2608,24 +2301,23 @@ f1 <- (2 * sensibilidade * precisao) / (sensibilidade + precisao)
 ```
 
 ``` r
-metricas <- kable(
-              data.frame(
-                "Acuracia" = acuracia, 
-                "Precisao" = precisao, 
-                "Sensibilidade" = sensibilidade,
-                "F1-Score" = f1), format = "markdown", align = 'l')
+metricas <- data.frame(
+  "Acuracia"      = acuracia, 
+  "Precisao"      = precisao, 
+  "Sensibilidade" = sensibilidade, 
+  "F1-Score"      = f1)
+
 metricas
 ```
 
-| Acuracia  | Precisao  | Sensibilidade | F1.Score  |
-|:----------|:----------|:--------------|:----------|
-| 0,8431373 | 0,8947368 | 0,7391304     | 0,8095238 |
+    ##    Acuracia Precisao Sensibilidade  F1.Score
+    ## 1 0.9122807        1           0.8 0.8888889
 
 #### Curva ROC
 
 ``` r
 class1 <- predict(ajt.trn, newdata = mdl.vld, type = "response")
-class2 <- mdl.vld$class
+class2 <- mdl.vld[target_names]
 
 pred <- prediction(class1, class2)
 perf <- performance(pred, "tpr", "fpr")
@@ -2637,7 +2329,7 @@ plot(perf, col = rainbow(10, alpha = NULL))
 ```
 
 ![Gerando uma curva ROC em
-R](project_files/figure-markdown_github/Output%20ROC-1.png)
+R](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Output%20ROC-1.png)
 
 ------------------------------------------------------------------------
 
@@ -2651,7 +2343,7 @@ chisq.test(previsoes$observado, previsoes$previsto)
     ##  Pearson's Chi-squared test with Yates' continuity correction
     ## 
     ## data:  previsoes$observado and previsoes$previsto
-    ## X-squared = 21,312, df = 1, p-value = 3,903e-06
+    ## X-squared = 36.004, df = 1, p-value = 1.97e-09
 
 ------------------------------------------------------------------------
 
@@ -2664,7 +2356,7 @@ predict(ajt.trn,
         newdata = mdl.tst, 
         type = "response") %>% 
   round() %>% 
-  factor(labels = c("Não", "Sim")) -> predicao
+  factor(labels = c("Negative", "Positive")) -> predicao
 ```
 
 Tabela para as predições de teste.
@@ -2682,13 +2374,13 @@ CrossTable(predicao, prop.t = T, digits = 2)
     ## |-------------------------|
     ## 
     ##  
-    ## Total Observations in Table:  156 
+    ## Total Observations in Table:  130 
     ## 
     ##  
-    ##           |       Não |       Sim | 
+    ##           |  Negative |  Positive | 
     ##           |-----------|-----------|
-    ##           |        60 |        96 | 
-    ##           |      0,38 |      0,62 | 
+    ##           |        63 |        67 | 
+    ##           |      0.48 |      0.52 | 
     ##           |-----------|-----------|
     ## 
     ## 

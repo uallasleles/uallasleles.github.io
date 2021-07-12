@@ -23,9 +23,13 @@ Web Scraping e SQLite
 <br>***Definição do Problema:** <br>
 Vamos obter dados de listas de repositórios no GitHub através de web scraping, e então salvá-los em um banco de dados.*
 
-## Mão na Massa
+------------------------------------------------------------------------
 
-### Importação dos Pacotes
+<br>
+
+### Mão na Massa
+
+#### Importação dos Pacotes
 
 
 ```python

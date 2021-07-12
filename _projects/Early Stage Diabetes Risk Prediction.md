@@ -15,11 +15,11 @@ Early Stage Diabetes Risk Prediction
 
 ------------------------------------------------------------------------
 
-<br> **Prevendo o risco de diabetes no estágio inicial:**<br>
+<br> ***Prevendo o risco de diabetes no estágio inicial:*** <br>
 
-> Este projeto usa técnicas de mineração de dados e de machine learning
+> *Este projeto usa técnicas de mineração de dados e de machine learning
 > para obter uma probabilidade que indique se uma pessoa tem determinada
-> doença.
+> doença.*
 
 <br>
 
@@ -33,6 +33,8 @@ stage diabetes risk prediction
 dataset.](https://archive.ics.uci.edu/ml/datasets/Early+stage+diabetes+risk+prediction+dataset.)*
 
 ------------------------------------------------------------------------
+
+<br>
 
 #### Importando os Pacotes
 
@@ -637,12 +639,11 @@ grid.arrange(g2, arrangeGrob(g3, g4, nrow=2), nrow = 1)
 ```
 
 ![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Boxplot-4.png)<!-- -->
-\#\#\# Medidas de Dispersão
+
+### Medidas de Dispersão
 
 As medidas de dispersão são a amplitude total, a variância, o
 desvio-padrão e o coeficiente de variação.
-
-------------------------------------------------------------------------
 
 > **Amplitude Total**
 
@@ -1885,8 +1886,6 @@ massa <- training
 mdl.tst <- testing
 ```
 
-------------------------------------------------------------------------
-
 ## Amostragem
 
 > **Dividir os dados em Treinamento, Validação e Teste.**
@@ -1962,11 +1961,7 @@ mdl.trn <- mdl.trn[ , -col_idx]
 mdl.vld <- mdl.vld[ , -col_idx]
 ```
 
-------------------------------------------------------------------------
-
 ## Treino
-
-------------------------------------------------------------------------
 
 > Treinando um ***Modelo Linear Generalizado*** para classificação.
 
@@ -1989,43 +1984,39 @@ summary(ajt.trn)
     ## 
     ## Deviance Residuals: 
     ##      Min        1Q    Median        3Q       Max  
-    ## -0.55767  -0.18560  -0.05658   0.16189   0.96258  
+    ## -0.53003  -0.19880  -0.04883   0.15190   0.90908  
     ## 
     ## Coefficients:
     ##                      Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)         0.9128316  0.1377595   6.626 1.48e-10 ***
-    ## Age                -0.0009127  0.0016232  -0.562  0.57432    
-    ## Gender             -0.2741368  0.0381679  -7.182 4.94e-12 ***
-    ## Polyuria            0.3572136  0.0441646   8.088 1.31e-14 ***
-    ## Polydipsia          0.2780265  0.0434161   6.404 5.48e-10 ***
-    ## sudden.weight.loss  0.0412359  0.0389449   1.059  0.29049    
-    ## weakness           -0.0421885  0.0393438  -1.072  0.28440    
-    ## Polyphagia          0.0059925  0.0386659   0.155  0.87693    
-    ## Genital.thrush      0.2022449  0.0416061   4.861 1.84e-06 ***
-    ## visual.blurring     0.0952743  0.0418822   2.275  0.02359 *  
-    ## Itching            -0.0538142  0.0397530  -1.354  0.17679    
-    ## Irritability        0.1163068  0.0403062   2.886  0.00418 ** 
-    ## delayed.healing    -0.1221219  0.0403543  -3.026  0.00268 ** 
-    ## partial.paresis     0.0837285  0.0411583   2.034  0.04276 *  
-    ## muscle.stiffness   -0.0404481  0.0389613  -1.038  0.29999    
-    ## Alopecia            0.0161265  0.0430516   0.375  0.70822    
-    ## Obesity            -0.0827626  0.0473764  -1.747  0.08162 .  
+    ## (Intercept)         0.7470115  0.1315719   5.678 3.10e-08 ***
+    ## Age                -0.0006627  0.0015517  -0.427  0.66964    
+    ## Gender             -0.2340971  0.0376437  -6.219 1.59e-09 ***
+    ## Polyuria            0.3344294  0.0437197   7.649 2.46e-13 ***
+    ## Polydipsia          0.3146984  0.0445570   7.063 1.04e-11 ***
+    ## sudden.weight.loss  0.0517330  0.0375096   1.379  0.16881    
+    ## weakness           -0.0421435  0.0379491  -1.111  0.26762    
+    ## Polyphagia         -0.0079813  0.0372282  -0.214  0.83038    
+    ## Genital.thrush      0.1756749  0.0420455   4.178 3.81e-05 ***
+    ## visual.blurring     0.0626126  0.0406142   1.542  0.12416    
+    ## Itching            -0.1110721  0.0371532  -2.990  0.00301 ** 
+    ## Irritability        0.1812412  0.0401985   4.509 9.20e-06 ***
+    ## delayed.healing    -0.0843526  0.0375554  -2.246  0.02539 *  
+    ## partial.paresis     0.0847353  0.0408604   2.074  0.03891 *  
+    ## muscle.stiffness   -0.0247943  0.0385191  -0.644  0.52025    
+    ## Alopecia            0.0211681  0.0411172   0.515  0.60704    
+    ## Obesity            -0.0140001  0.0460250  -0.304  0.76119    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## (Dispersion parameter for gaussian family taken to be 0.08479063)
+    ## (Dispersion parameter for gaussian family taken to be 0.08296362)
     ## 
-    ##     Null deviance: 78.078  on 332  degrees of freedom
-    ## Residual deviance: 26.794  on 316  degrees of freedom
-    ## AIC: 141.86
+    ##     Null deviance: 77.033  on 332  degrees of freedom
+    ## Residual deviance: 26.217  on 316  degrees of freedom
+    ## AIC: 134.61
     ## 
     ## Number of Fisher Scoring iterations: 2
 
-------------------------------------------------------------------------
-
 ## Validação
-
-------------------------------------------------------------------------
 
 > Validando o modelo através de predições utilizando o *Conjunto de
 > Validação*.
@@ -2068,20 +2059,20 @@ CrossTable(previsoes$observado,
     ##                     | previsoes$previsto 
     ## previsoes$observado |  Negative |  Positive | Row Total | 
     ## --------------------|-----------|-----------|-----------|
-    ##            Negative |        21 |         0 |        21 | 
-    ##                     |    15.091 |    11.789 |           | 
-    ##                     |     1.000 |     0.000 |     0.368 | 
-    ##                     |     0.840 |     0.000 |           | 
-    ##                     |     0.368 |     0.000 |           | 
+    ##            Negative |        23 |         1 |        24 | 
+    ##                     |     9.534 |     9.874 |           | 
+    ##                     |     0.958 |     0.042 |     0.421 | 
+    ##                     |     0.793 |     0.036 |           | 
+    ##                     |     0.404 |     0.018 |           | 
     ## --------------------|-----------|-----------|-----------|
-    ##            Positive |         4 |        32 |        36 | 
-    ##                     |     8.803 |     6.877 |           | 
-    ##                     |     0.111 |     0.889 |     0.632 | 
-    ##                     |     0.160 |     1.000 |           | 
-    ##                     |     0.070 |     0.561 |           | 
+    ##            Positive |         6 |        27 |        33 | 
+    ##                     |     6.934 |     7.181 |           | 
+    ##                     |     0.182 |     0.818 |     0.579 | 
+    ##                     |     0.207 |     0.964 |           | 
+    ##                     |     0.105 |     0.474 |           | 
     ## --------------------|-----------|-----------|-----------|
-    ##        Column Total |        25 |        32 |        57 | 
-    ##                     |     0.439 |     0.561 |           | 
+    ##        Column Total |        29 |        28 |        57 | 
+    ##                     |     0.509 |     0.491 |           | 
     ## --------------------|-----------|-----------|-----------|
     ## 
     ## 
@@ -2094,11 +2085,9 @@ chisq.test(previsoes$observado, previsoes$previsto)
     ##  Pearson's Chi-squared test with Yates' continuity correction
     ## 
     ## data:  previsoes$observado and previsoes$previsto
-    ## X-squared = 39.027, df = 1, p-value = 4.181e-10
+    ## X-squared = 30.488, df = 1, p-value = 3.359e-08
 
 ![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
-
-------------------------------------------------------------------------
 
 ### Avaliação
 
@@ -2119,35 +2108,33 @@ print(cm)
     ## 
     ##           Reference
     ## Prediction Negative Positive
-    ##   Negative       21        0
-    ##   Positive        4       32
-    ##                                         
-    ##                Accuracy : 0.9298        
-    ##                  95% CI : (0.83, 0.9805)
-    ##     No Information Rate : 0.5614        
-    ##     P-Value [Acc > NIR] : 8.29e-10      
-    ##                                         
-    ##                   Kappa : 0.855         
-    ##                                         
-    ##  Mcnemar's Test P-Value : 0.1336        
-    ##                                         
-    ##             Sensitivity : 1.0000        
-    ##             Specificity : 0.8400        
-    ##          Pos Pred Value : 0.8889        
-    ##          Neg Pred Value : 1.0000        
-    ##              Prevalence : 0.5614        
-    ##          Detection Rate : 0.5614        
-    ##    Detection Prevalence : 0.6316        
-    ##       Balanced Accuracy : 0.9200        
-    ##                                         
-    ##        'Positive' Class : Positive      
+    ##   Negative       23        1
+    ##   Positive        6       27
+    ##                                           
+    ##                Accuracy : 0.8772          
+    ##                  95% CI : (0.7632, 0.9492)
+    ##     No Information Rate : 0.5088          
+    ##     P-Value [Acc > NIR] : 4.489e-09       
+    ##                                           
+    ##                   Kappa : 0.7551          
+    ##                                           
+    ##  Mcnemar's Test P-Value : 0.1306          
+    ##                                           
+    ##             Sensitivity : 0.9643          
+    ##             Specificity : 0.7931          
+    ##          Pos Pred Value : 0.8182          
+    ##          Neg Pred Value : 0.9583          
+    ##              Prevalence : 0.4912          
+    ##          Detection Rate : 0.4737          
+    ##    Detection Prevalence : 0.5789          
+    ##       Balanced Accuracy : 0.8787          
+    ##                                           
+    ##        'Positive' Class : Positive        
     ## 
-
-------------------------------------------------------------------------
 
 ***Accuracy***
 
-Através da *Matriz de Confusão* obtivemos a ***Acurácia de 92.98%***,
+Através da *Matriz de Confusão* obtivemos a ***Acurácia de 87.72%***,
 ela corresponde a fração das premissas corretas em relação ao total de
 observações. Esta métrica também poderia ser calculada utilizando a
 função *table()* ou a função *CrossTable()*, pois ela corresponde a soma
@@ -2157,12 +2144,10 @@ modelo. Analisamos então, outras métricas obtidas pela Confusion Matrix,
 que nos informe não apenas o percentual de acertos, mas também a
 precisão e a sensibilidade.
 
-------------------------------------------------------------------------
-
 ***95% CI***
 
-O ***Intervalo de Confiança***, denotado por *95% CI*, é ***\[0.83,
-0.9805\]***. Ele é uma *estimativa por intervalo* de um *parâmetro
+O ***Intervalo de Confiança***, denotado por *95% CI*, é ***\[0.7632,
+0.9492\]***. Ele é uma *estimativa por intervalo* de um *parâmetro
 populacional*, que com dada frequência (*Nível de Confiança*), inclui o
 parâmetro de interesse. Nesse caso específico, significa dizer que 95%
 dos *intervalos de confiança* observados têm o valor real do parâmetro.
@@ -2173,18 +2158,14 @@ dos *intervalos de confiança* observados têm o valor real do parâmetro.
 
 ***Kappa***
 
-O ***Teste de Concordância Kappa*** foi igual a ***0.855***. O
+O ***Teste de Concordância Kappa*** foi igual a ***0.7551***. O
 coeficiente de Kappa tem a finalidade de medir o grau de concordância
 entre proporções. Ele demonstra se uma dada classificação pode ser
 considerada confiável.
 
 O seu valor pode ser interpretado por meio de uma tabela.
 
-------------------------------------------------------------------------
-
 ***Mcnemar’s Test P-Value***
-
-------------------------------------------------------------------------
 
 ***Sensitivity***
 
@@ -2207,8 +2188,6 @@ fourfoldplot(cm$table)
 ```
 
 ![](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Plot%20Confusion%20Matrix-1.png)<!-- -->
-
-------------------------------------------------------------------------
 
 O pacote Caret nos dá, já calculadas, as principais métricas
 estatísticas, baseadas nos tipos de acertos e, nos tipos de erros. Para
@@ -2274,8 +2253,6 @@ métrica mais sensível a desproporções.
 Outra forma é a ***F-Beta*** onde podemos escolher o Peso entre Precisão
 e Sensibilidade através do parâmetro Beta.
 
-------------------------------------------------------------------------
-
 #### Métricas de Avaliação
 
 Avaliar um modelo de Classificação Binária:
@@ -2310,8 +2287,8 @@ metricas <- data.frame(
 metricas
 ```
 
-    ##    Acuracia Precisao Sensibilidade  F1.Score
-    ## 1 0.9298246        1          0.84 0.9130435
+    ##   Acuracia  Precisao Sensibilidade  F1.Score
+    ## 1 0.877193 0.9583333     0.7931034 0.8679245
 
 #### Curva ROC
 
@@ -2331,8 +2308,6 @@ plot(perf, col = rainbow(10, alpha = NULL))
 ![Gerando uma curva ROC em
 R](Early_Stage_Diabetes_Risk_Prediction_files/figure-gfm/Output%20ROC-1.png)
 
-------------------------------------------------------------------------
-
 Realizando o ***Teste Chi-Quadrado*** (X²).
 
 ``` r
@@ -2343,9 +2318,7 @@ chisq.test(previsoes$observado, previsoes$previsto)
     ##  Pearson's Chi-squared test with Yates' continuity correction
     ## 
     ## data:  previsoes$observado and previsoes$previsto
-    ## X-squared = 39.027, df = 1, p-value = 4.181e-10
-
-------------------------------------------------------------------------
+    ## X-squared = 30.488, df = 1, p-value = 3.359e-08
 
 ## Teste
 
@@ -2379,8 +2352,8 @@ CrossTable(predicao, prop.t = T, digits = 2)
     ##  
     ##           |  Negative |  Positive | 
     ##           |-----------|-----------|
-    ##           |        66 |        64 | 
-    ##           |      0.51 |      0.49 | 
+    ##           |        64 |        66 | 
+    ##           |      0.49 |      0.51 | 
     ##           |-----------|-----------|
     ## 
     ## 

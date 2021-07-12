@@ -1,22 +1,24 @@
 ---
-name: Web Scraping e SQLite
-tools: [Python, SQLite, JupyterLab]
-image:
-description: Obtendo dados de páginas web e salvando em um banco de dados.
-
+title       : "Web Scraping e SQLite"
+name        : Web Scraping e SQLite
+author      : "<i>Author: Uallas Leles</i>"
+date        : "<i>Date: 23 de junho, 2021</i>"
+tools       : [Python, SQLite, JupyterLab]
+image       :
+description : "Prevendo o risco de diabetes no estágio inicial."
 ---
 
-
-# Web Scraping e SQLite
-___
-
-
+Web Scraping e SQLite
+================
 <i>Author: Uallas Leles</i><br>
-<i>Data: 23/06/2021</i>
+<i>Date: 23 de junho, 2021</i>
 
-> **Obtendo dados de páginas web e salvando em um banco de dados** <br>
-> O objetivo deste projeto é obter dados de páginas web através de web scraping e salvá-los em um banco de dados SQLite.<br>
-> Neste trabalho, especificamente, não há preocupação na relevância dos dados ou na exploração de insights. A finalidade é construir um workflow básico que faça a extração e estruturação dos dados para etapas seguintes.
+------------------------------------------------------------------------
+
+<br> ***Obtendo dados de páginas web e salvando em um banco de dados:*** <br>
+
+> *O objetivo deste projeto é obter dados de páginas web através de web scraping e salvá-los em um banco de dados SQLite.*<br>
+> *Neste trabalho, especificamente, não há preocupação na relevância dos dados ou na exploração de insights. A finalidade é construir um workflow básico que faça a extração e estruturação dos dados para etapas seguintes.*
 
 <br>***Definição do Problema:** <br>
 Vamos obter dados de listas de repositórios no GitHub através de web scraping, e então salvá-los em um banco de dados.*
